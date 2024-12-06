@@ -5,7 +5,8 @@ import cookiePaser from 'cookie-parser'
 import connectToDb from '../config/connectToDB';
 import log from '../src/util/logger'
 import {initRedis} from '../config/connectToRedis'
-import generatesecret from '../src/util/corJob'
+import generatesecret from './util/cornJob'
+import {authRateLimiter} from './util/rateLimit'
 
 //route
 import authRouter from '../src/modules/auth/auth.routes'
@@ -36,7 +37,7 @@ app.use(express.json());
 app.use(cookiePaser())
 
 //route
-app.use('/api/auth',authRouter);
+app.use('/api/auth',authRateLimiter,authRouter);
 
 
 
