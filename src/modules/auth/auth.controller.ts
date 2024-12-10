@@ -9,11 +9,10 @@ class authController{
 
     async register(req: Request<{},{},Register>, res: Response):Promise<void>{
         try {
+            const {firstname, lastname, email, password,} = req.body;
+            const createUserData = await authService.create({firstname, lastname, email, password});
 
-            const body = req.body;
-            const createUserData = await authService.create(body);
-
-            res.status(201).json(createUserData);
+            res.status(201).json({success: true,message: 'register successfully'});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})
             log.error({error:error.message})
@@ -22,8 +21,8 @@ class authController{
 
     async login(req: Request<{}, {}, Login>, res: Response):Promise<void>{ 
         try {
-            const body = req.body;
-            const {accessToken,refreshToken} = await authService.login(body);
+            const {email,password} = req.body;
+            const {accessToken,refreshToken} = await authService.login({email,password});
             res.cookie('refresh_token', refreshToken, {
                 httpOnly: true, 
                 secure: false, 

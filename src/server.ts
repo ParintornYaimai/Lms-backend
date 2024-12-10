@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from 'express'
+import express from 'express'
 import cors, { CorsOptions } from 'cors'
 import dotenv from 'dotenv'
 import cookiePaser from 'cookie-parser'
@@ -6,10 +6,11 @@ import connectToDb from '../config/connectToDB';
 import log from '../src/util/logger'
 import {initRedis} from '../config/connectToRedis'
 import generatesecret from './util/cornJob'
-import {authRateLimiter} from './util/rateLimit'
+import {authRateLimiter, publicRateLimiter} from './util/rateLimit'
 
 //route
 import authRouter from '../src/modules/auth/auth.routes'
+import noteRouter from '../src/modules/note/note.routes'
 dotenv.config();
 
 const app = express()
@@ -25,7 +26,7 @@ const corsOption: CorsOptions  = {
             callback(new Error('Not allowed by CORS'));
         }
     },
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT','PATCH', 'DELETE'],
     credentials: true,
 }
 
@@ -36,9 +37,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookiePaser())
 
+
 //route
 app.use('/api/auth',authRateLimiter,authRouter);
-
+app.use('/api/note',publicRateLimiter,noteRouter);
 
 
 const port = process.env.PORT

@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import {userTypeModel,secretTypeModel} from "../type/auth.type"
+import {userTypeModel,secretTypeModel} from "../type/user.type"
 
 
 const userSchemaModel = new Schema<userTypeModel>({
@@ -8,7 +8,9 @@ const userSchemaModel = new Schema<userTypeModel>({
     email:{type: String, required:true},
     password:{type: String, required:true},
     role:{type: String,default:'student'},
-    courses:[{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }], 
+    courses:[{ type: Schema.Types.ObjectId, ref: 'Course' }], 
+    notes: [{ type: Schema.Types.ObjectId, ref: 'Note' }],
+    comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
     profilepicture: {type: String, default:null},
     refreshTokens: [{ token: String, expiresAt: Date }]
 },{timestamps:true})
@@ -22,6 +24,6 @@ const secretSchema = new Schema<secretTypeModel>({
 },{timestamps:true});
 
 
-export const userModel = mongoose.model<userTypeModel>('user', userSchemaModel);
-export const secretModel  = mongoose.model<secretTypeModel>('secret', secretSchema);
+export const userModel = mongoose.model<userTypeModel>('User', userSchemaModel);
+export const secretModel  = mongoose.model<secretTypeModel>('Secret', secretSchema);
 

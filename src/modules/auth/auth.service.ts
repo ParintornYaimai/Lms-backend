@@ -1,5 +1,5 @@
-import { userTypeModel,loginTypeModel, logoutTypeModel } from "../../type/auth.type";
-import {secretModel,userModel} from "../../model/auth.Model"
+import { userTypeModel,loginTypeModel, logoutTypeModel } from "../../type/user.type";
+import {secretModel,userModel} from "../../model/user.Model"
 import { generateAccessToken, generateRefreshToken } from "../../util/token";
 import jwt,{JwtPayload} from "jsonwebtoken"
 import bcrypt from 'bcrypt';
