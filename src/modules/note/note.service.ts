@@ -6,14 +6,14 @@ import { Types } from "mongoose";
 class noteService{
 
     async getAll(){
-        const note = await noteModel.find();
+        const note = await noteModel.find().populate('author','-email -password -role -courses -comments -refreshTokens -createdAt -updatedAt -notes');
         if(note.length === 0) throw new Error('No data found');
 
         return note;
     }
 
     async getById(id: string){
-        const note = await noteModel.findById(id);
+        const note = await noteModel.findById(id).populate('author','-email -password -role -courses -comments -refreshTokens -createdAt -updatedAt -notes');
         if(!note) throw new Error(`Data not found ${id}`);
 
         return note;
@@ -30,8 +30,9 @@ class noteService{
 
     async getByTag(data:noteGetByTagType){
         const {tag} = data
-
-        const note = await noteModel.find({tag:tag});
+        //ป้องกัน
+        const safeTag = tag.replace(/[\$|\.]/g, "");
+        const note = await noteModel.find({tag:safeTag}).populate('author','-email -password -role -courses -comments -refreshTokens -createdAt -updatedAt -notes');
         if(note.length === 0) throw new Error(`Data not found ${tag}`);
 
         return note;
@@ -70,24 +71,26 @@ class noteService{
         return updateNote;
     }
 
-    //ต้องเช็คว่ามี id อยู่ใน usermodel ถึงจะลบได้
-    //ยังบัคอยู่ยังสามารถลบได้ทั้งหมด ต้องเเก้ให้ลบได้เฉราะ id note ที้ userเก็บเเละ ลบid note ที่ user เเละเป็นข้อมูลที่ลบเเล้วด้วย
     async delete(data:noteDeteteType){
         if (!data.id) {
             throw new Error("ID is required for deletion");
         }
-        const userNote = await userModel.findById(data.accountOwnerId).select('notes') 
-        console.log(userNote)
-        if(!userNote || !userNote.notes) throw new Error('User not found')
+        const userNote =  await noteModel.findOne({
+            _id: data.id,
+            author: data.accountOwnerId,
+        }); 
 
-        const notes: object[] = userNote.notes;
+        if (!userNote) {
+            throw new Error("Cannot be deleted");
+        }
         
-        if (notes.includes({id:data.id})) throw new Error('Cannot be deleted');
+        const deleteNote = await noteModel.findByIdAndDelete(data.id);
 
-        const deleteNote = await noteModel.findByIdAndDelete(data.id, { new:true });
-        if(!deleteNote) throw new Error(`Note with id: ${data.id} not found`)
-        
-        return deleteNote
+        await userModel.findByIdAndUpdate(data.accountOwnerId, {
+            $pull: { notes: data.id },
+        });
+    
+        return deleteNote;
     }
 
 }
