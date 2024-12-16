@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import {noteTypeModel} from "../type/note.type"
+import {noteTypeModel} from "../types/note.type"
 
 
 const noteSchemaModel = new Schema<noteTypeModel>({
