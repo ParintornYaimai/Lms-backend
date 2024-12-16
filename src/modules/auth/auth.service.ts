@@ -1,4 +1,4 @@
-import { userTypeModel,loginTypeModel, logoutTypeModel } from "../../type/user.type";
+import { userTypeModel,loginTypeModel, logoutTypeModel } from "../../types/user.type";
 import {secretModel,userModel} from "../../model/user.Model"
 import { generateAccessToken, generateRefreshToken } from "../../util/token";
 import jwt,{JwtPayload} from "jsonwebtoken"
@@ -74,7 +74,6 @@ class AuthService{
         const existSecret = await secretModel.findOne();
     
         if(existSecret){
-
             existSecret.oldSecrets = existSecret.oldSecrets.filter(
                 (oldSecret) => new Date(oldSecret.expiresAt) > new Date()
             );
@@ -95,7 +94,6 @@ class AuthService{
             const newSecretObj = new secretModel({
                 currentSecret: newSecret,
                 oldSecrets: []
-    
             })
 
             await newSecretObj.save();

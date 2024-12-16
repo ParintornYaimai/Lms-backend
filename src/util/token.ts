@@ -39,6 +39,8 @@ export const authenticateToken  =async(req: Request, res: Response, next:NextFun
         const authHeader = req.headers['authorization']
         if(!authHeader || !authHeader.startsWith('Bearer ')){
             return res.status(401).json({ error: 'Access token required' })
+        }else if(!req.cookies.refresh_token){
+            return res.status(401).json({ error: 'Refresh token required' });
         }
 
         token = authHeader.split(' ')[1];

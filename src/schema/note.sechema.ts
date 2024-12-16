@@ -1,6 +1,5 @@
 import {z} from "zod";
 
-
 export const createNoteSchema = z.object({
     title: z.string().min(5,"Please enter a title longer than 5 characters"),
     tag: z.string().refine(val => val.trim().length > 0, { message: "Tag must not be empty or whitespace only",}),
@@ -22,12 +21,6 @@ export const updateNoteSchema = z.object({
     }).optional(),
 })
 
-// export const deleteNoteSchema = z.object({
-//     id: z.string(),
-// })
-
-
 export type CreateNote = z.infer<typeof createNoteSchema>;
 export type GetNoteByTag = z.infer<typeof getNoteByTagSchema>
 export type UpdateNote = z.infer<typeof updateNoteSchema>
-// export type DeleteNote = z.infer<typeof deleteNoteSchema>

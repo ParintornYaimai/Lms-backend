@@ -1,4 +1,4 @@
-import { noteCreateDataType, noteDeteteType, noteGetByTagType, noteUpdateDataType, noteGetByIdType } from "src/type/note.type";
+import { createNoteType, deteteNoteType, getNoteByTagType, updateNoteType, getNoteByIdType } from "src/types/note.type";
 import {noteModel} from "../../model/note.Model"
 import { userModel } from "../../model/user.Model";
 import { Types } from "mongoose";
@@ -6,54 +6,63 @@ import { Types } from "mongoose";
 class noteService{
 
     async getAll(){
-        const note = await noteModel.find().populate('author','-email -password -role -courses -comments -refreshTokens -createdAt -updatedAt -notes');
+        const note = await noteModel.find()
+        .populate('author','-email -password -role -courses -comments -refreshTokens -createdAt -updatedAt -notes')
+        .select('-comments'); ;
         if(note.length === 0) throw new Error('No data found');
 
         return note;
     }
 
     async getById(id: string){
-        const note = await noteModel.findById(id).populate('author','-email -password -role -courses -comments -refreshTokens -createdAt -updatedAt -notes');
-        if(!note) throw new Error(`Data not found ${id}`);
+        if(!id){
+            throw new Error('"ID is required"')
+        };
 
+        const note = await noteModel.findById(id)
+        .populate('author', '-email -password -role -courses -comments -refreshTokens -createdAt -updatedAt -notes') 
+        .populate({
+            path: 'comments',
+            populate: {
+                path: 'author',
+                select: '-email -password -role -refreshTokens -notes -comments -courses -createdAt -updatedAt ', 
+            },
+        });
+    
         return note;
     }
 
     // For account owner
     // My note 
-    async getByIdForAccountId(data:noteGetByIdType){
-        const note = await noteModel.find({author: {$in: data.id}}).populate('author','-email -password -role -courses -comments -refreshTokens -createdAt -updatedAt');
-        if(note.length === 0) throw new Error(`Data not found ${data.id}`);
+    async getByIdForAccountId({id}: getNoteByIdType){
+        const note = await noteModel.find({author: {$in: id}})
+        .populate('comments')
+        .populate('author','-email -password -role -courses -comments -refreshTokens -createdAt -updatedAt -notes');
+        if(note.length === 0) throw new Error(`Data not found ${id}`);
 
         return note;
     }
 
-    async getByTag(data:noteGetByTagType){
-        const {tag} = data
+    async getByTag({tag}: getNoteByTagType){
         //ป้องกัน
         const safeTag = tag.replace(/[\$|\.]/g, "");
-        const note = await noteModel.find({tag:safeTag}).populate('author','-email -password -role -courses -comments -refreshTokens -createdAt -updatedAt -notes');
+        const note = await noteModel.find({tag:safeTag})
+        .populate('author','-email -password -role -courses -comments -refreshTokens -createdAt -updatedAt -notes');
         if(note.length === 0) throw new Error(`Data not found ${tag}`);
 
         return note;
     }   
 
-    async create(data:noteCreateDataType){
-        const {title, tag, description, id} = data 
+    async create({title, tag, description, id}: createNoteType){
         const newNote = await  noteModel.create({title, tag, description,author:id});
 
-        const user = await userModel.findById(id);
-        if (!user || !user.notes) throw new Error('User not found');
-
-        user.notes.push(newNote._id);
-        await user.save();
-
+        const updatedUser = await userModel.findByIdAndUpdate(id,{ $push: { notes: newNote._id } },{ new: true } );
+        if (!updatedUser) throw new Error('User not found');
+        
         return newNote;
     }
 
-    async update(data:noteUpdateDataType){
-        const {id,title, tag, description,accountOwnerId} = data
-
+    async update({id,title, tag, description,accountOwnerId}: updateNoteType){
         const userNote = await userModel.findById(accountOwnerId).select('notes') 
         if(!userNote || !userNote.notes) throw new Error('User not found')
 
@@ -71,23 +80,24 @@ class noteService{
         return updateNote;
     }
 
-    async delete(data:noteDeteteType){
-        if (!data.id) {
+    async delete({id, accountOwnerId}:deteteNoteType){
+        if (!id) {
             throw new Error("ID is required for deletion");
         }
-        const userNote =  await noteModel.findOne({
-            _id: data.id,
-            author: data.accountOwnerId,
+                
+        const userNote = await noteModel.findOne({
+            _id: id,
+            author: accountOwnerId,
         }); 
 
         if (!userNote) {
             throw new Error("Cannot be deleted");
         }
         
-        const deleteNote = await noteModel.findByIdAndDelete(data.id);
+        const deleteNote = await noteModel.findByIdAndDelete(id);
 
-        await userModel.findByIdAndUpdate(data.accountOwnerId, {
-            $pull: { notes: data.id },
+        await userModel.findByIdAndUpdate(accountOwnerId, {
+            $pull: { notes: id },
         });
     
         return deleteNote;
