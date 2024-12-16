@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
-import { string } from "zod";
 
-export interface noteTypeModel{
+
+export interface noteTypeModel extends Document{
     title: string
     tag:string
     description: string
@@ -9,22 +9,22 @@ export interface noteTypeModel{
     comments: Types.ObjectId[];
 }
 
-export interface noteGetByIdType{
+export interface getNoteByIdType{
     id:Types.ObjectId ,   
 }
 
-export interface noteGetByTagType{
+export interface getNoteByTagType{
     tag:string ,   
 }
 
-export interface noteCreateDataType{
+export interface createNoteType{
     id:Types.ObjectId
     title: string,
     tag?:string,
     description: string
 }
 
-export interface noteUpdateDataType{
+export interface updateNoteType{
     id: string
     title?: string,
     tag?:string,
@@ -32,7 +32,7 @@ export interface noteUpdateDataType{
     accountOwnerId: string
 }
 
-export interface noteDeteteType{
+export interface deteteNoteType{
     id: string
     accountOwnerId:string
 }

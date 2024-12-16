@@ -1,5 +1,6 @@
 import { Types } from "mongoose";
-export interface userTypeModel{
+
+export interface userTypeModel {
     firstname: string
     lastname: string
     email: string
@@ -25,8 +26,4 @@ export interface logoutTypeModel{
 export interface secretTypeModel{
     currentSecret: string ,
     oldSecrets: { secret: string; expiresAt: Date }[]; 
-    // oldSecrets: [{
-    //     secret: { type: String, required: true },
-    //     expiresAt: { type: Date, required: true }
-    // }],
 }
