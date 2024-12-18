@@ -4,6 +4,7 @@ import noteService from "./note.service";
 import { CreateNote, GetNoteByTag, UpdateNote, } from 'src/schema/note.sechema';
 
 
+
 // Request<Params, ResBody, ReqBody, Query>
 // Request<{},{},GetNoteByTag>
 
@@ -17,7 +18,7 @@ class noteController{
             res.status(200).json({success: true,data});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
-            log.error({error:error.message});
+            log.error(error.message);
         }
     }
 
@@ -30,7 +31,7 @@ class noteController{
             res.status(200).json({success:true ,data});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
-            log.error({error:error.message});
+            log.error(error.message);
         }
     }
 
@@ -43,7 +44,7 @@ class noteController{
             res.status(200).json({success:true ,data});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
-            log.error({error:error.message});
+            log.error(error.message);
         }
     }
 
@@ -57,7 +58,7 @@ class noteController{
             res.status(200).json({success:true ,data});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
-            log.error({error:error.message});
+            log.error(error.message);
         }
     }
 
@@ -71,7 +72,7 @@ class noteController{
             res.status(200).json({success:true ,message:"Creation successful"});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
-            log.error({error:error.message});
+            log.error(error.message);
         }
     }
 
@@ -85,7 +86,7 @@ class noteController{
             res.status(200).json({success:true ,message:"Creation successful"});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
-            log.error({error:error.message});
+            log.error(error.message);
         }
     }
 
@@ -99,7 +100,7 @@ class noteController{
             res.status(200).json({success:true,message:'Delete successful'})
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})
-            log.error({error:error.message})
+            log.error(error.message);
         }
     }
 }

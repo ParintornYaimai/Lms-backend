@@ -19,11 +19,11 @@ import { authenticateToken } from './util/token';
 dotenv.config();
 
 const app = express()
-const server = http.createServer(app);
+const server = http.createServer(app)
+const io = initializeSocket(server)
 
-
-//cors option
-const allowedOrigins = ['http://localhost:5500'];
+// cors option
+const allowedOrigins = ['http://localhost:5500',',http://localhost:3000'];
 const corsOption: CorsOptions  = {
     origin: (origin,callback) =>{
         if(!origin || allowedOrigins.includes(origin)  ){
@@ -42,6 +42,8 @@ app.use(cors(corsOption));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookiePaser())
+app.set('socketIO', io);
+
 
 
 
@@ -56,6 +58,5 @@ app.listen(port,async()=> {
     log.info(`server start on port: ${port}`)
     await connectToDb()
     await initRedis()
-    initializeSocket(server);
     generatesecret()
 })

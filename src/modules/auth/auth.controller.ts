@@ -15,7 +15,7 @@ class authController{
             res.status(201).json({success: true,message: 'register successfully'});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})
-            log.error({error:error.message})
+            log.error(error.message);
         }
     }
 
@@ -33,7 +33,7 @@ class authController{
             res.status(200).json({success: true, access_token: accessToken});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})
-            log.error({error:error.message})
+            log.error(error.message);
         }
     }
     
@@ -53,7 +53,7 @@ class authController{
             
         } catch (error: any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})
-            log.error({error:error.message})
+            log.error(error.message);
         }
     }
 
@@ -68,7 +68,7 @@ class authController{
             res.status(200).json({ access_Token: newAccessToken })
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})
-            log.error({error:error.message})
+            log.error(error.message);
         }
     }
 }
