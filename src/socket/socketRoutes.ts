@@ -1,18 +1,16 @@
-import { Server } from 'socket.io';
-// import { chatController } from '../controllers/chatController';
-// import noteController from '../modules/note/note.controller';
+// import { Server } from 'socket.io';
+// import log from '../util/logger';
+// import {noteHandlers} from './note.Socket';
+// // import {commentHandlers} from './comment.Socket'
 
-export const socketRoutes = (io: Server) => {
-  // เมื่อมีการเชื่อมต่อ socket.io
-  io.on('connection', (socket) => {
-    console.log('User connected');
+// export const socketRoutes = (io: Server) => {
+//   io.on('connection', (socket) => {
 
-    // เรียกใช้ controller สำหรับ chat และ post
-    // noteController(socket);
-    // postController(socket);
+//     noteHandlers(io, socket);
+//     // commentHandlers(io, socket);
 
-    socket.on('disconnect', () => {
-      console.log('User disconnected');
-    });
-  });
-};
+//     socket.on('disconnect', () => {
+//       log.info('User disconnected')
+//     });
+//   });
+// };

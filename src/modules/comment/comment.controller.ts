@@ -18,6 +18,7 @@ class commmentController{
             const noteId = new Types.ObjectId(note);
             const data = await commentService.create({content, noteId, author})
             
+            req.app.get('socketIO').emit('comment:create',data );
             res.status(200).json({success:true ,message:"Creation successful"});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})
@@ -32,6 +33,7 @@ class commmentController{
             
             const data = await commentService.delete({id, accountOwnerId })
 
+            req.app.get('socketIO').emit('comment:delete',data );
             res.status(200).json({success:true,message:'Delete successful'})
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})

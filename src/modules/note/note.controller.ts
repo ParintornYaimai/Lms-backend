@@ -13,6 +13,7 @@ class noteController{
         try {
             const data = await noteService.getAll();
 
+            req.app.get('socketIO').emit('note:getAll',data );
             res.status(200).json({success: true,data});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -25,6 +26,7 @@ class noteController{
             const id = req.params.id
             const data = await noteService.getById(id)
             
+            req.app.get('socketIO').emit('note:getById',data );
             res.status(200).json({success:true ,data});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -37,6 +39,7 @@ class noteController{
             const id = (req as any).user.id;  
             const data = await noteService.getByIdForAccountId({id});
 
+            req.app.get('socketIO').emit('note:getNoteByIdForAccountOwner',data );
             res.status(200).json({success:true ,data});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -50,6 +53,7 @@ class noteController{
             const {tag} = req.body;
             const data = await noteService.getByTag({tag});
 
+            req.app.get('socketIO').emit('note:getByTag',data );
             res.status(200).json({success:true ,data});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -63,6 +67,7 @@ class noteController{
             const id = (req as any).user.id;
             const data = await noteService.create({title, tag, description, id});
 
+            req.app.get('socketIO').emit('note:create',data );
             res.status(200).json({success:true ,message:"Creation successful"});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -76,6 +81,7 @@ class noteController{
             const {id:accountOwnerId} = (req as any).user;
             const data = await noteService.update({id, title, tag, description ,accountOwnerId});;
 
+            req.app.get('socketIO').emit('note:update',data );
             res.status(200).json({success:true ,message:"Creation successful"});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -89,6 +95,7 @@ class noteController{
             const {id:accountOwnerId} = (req as any).user;
             const data = await noteService.delete({id,accountOwnerId});
 
+            req.app.get('socketIO').emit('note:delete',data );
             res.status(200).json({success:true,message:'Delete successful'})
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})
