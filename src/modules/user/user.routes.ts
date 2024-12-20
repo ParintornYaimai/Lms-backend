@@ -1,23 +1,14 @@
-import express from 'express';
-import userController from '../user/user.controller';
-import validate from '../../util/validate';
-import { updateUserRequestSchema } from '../../schema/user.schema';
-import { checkRole } from '../../middleware/checkRole';
+import express from "express";
+import userController from "../user/user.controller";
+import validate from "../../util/validate";
+import { updateUserSchema } from "../../schema/user.schema";
 
 const router = express.Router();
 
-// ดึงข้อมูลผู้ใช้
-router.get('/', checkRole(['student', 'teacher']), userController.getUser);
 
-// อัปเดตข้อมูลผู้ใช้
-router.patch(
-  '/update',
-  checkRole(['student', 'teacher']),
-  validate(updateUserRequestSchema),
-  userController.updateUser
-);
 
-// ลบข้อมูลผู้ใช้
-router.delete('/delete', checkRole(['student', 'teacher']), userController.deleteUser);
+router.get("/", userController.getUser);
+router.patch("/update",validate(updateUserSchema),userController.updateUser);
+router.delete("/delete", userController.deleteUser);
 
 export default router;

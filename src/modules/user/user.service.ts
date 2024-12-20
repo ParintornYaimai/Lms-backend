@@ -3,35 +3,29 @@ import { userModel } from "../../model/user.Model";
 import log from '../../util/logger';
 
 class UserService {
-  // Get User by ID
-  async getUser(userId: string) {
-    const user = await userModel.findOne({ userId });
 
-    if (!user) {
-      log.error(`User with ID ${userId} not found`);
+  async getUser(userId: string) {
+    const userData = await userModel.findById(userId).select('-password -refreshTokens');
+    
+    if (!userData) {
       throw new Error("User not found");
     }
 
-    log.info(`User with ID ${userId} fetched successfully`);
-    return user;
+    return userData;
   }
 
 // Update User
-  async updateUser(userId: string, data: UpdateUserRequestType) {  
-
-    const user = await userModel.findOne({ userId });
+  async updateUser({userId, firstname, lastname, welcomeMessage, language, dateFormat, timeFormat, country, timeZone, currentTime}: UpdateUserRequestType) {  
+    const user = await userModel.findById({ userId });
 
     if (!user) {
-      log.error(`User with ID ${userId} not found`);
       throw new Error("User not found");
     }
-
-    const updatedUser = { ...user.toObject(), ...data };
-
-    const savedUser = await userModel.findByIdAndUpdate(user._id, updatedUser, { new: true });
+    const savedUser = await userModel.findByIdAndUpdate(userId,
+    {firstname,lastname ,welcomeMessage, language, dateFormat, timeFormat, country, timeZone, currentTime},
+    { new: true });
 
     if (!savedUser) {
-      log.error(`Failed to save updated user with ID ${userId}`);
       throw new Error("Failed to save updated user");
     }
 
@@ -39,17 +33,15 @@ class UserService {
     return savedUser;
   }
 
-  // Delete User
   async deleteUser(userId: string) {  
-    // userId เป็น string
-    const result = await userModel.deleteOne({ userId });
+    
+    const deleteUser = await userModel.findByIdAndDelete(userId);
 
-    if (result.deletedCount === 0) {
-      log.error(`User with ID ${userId} not found`);
+    if (!deleteUser) {
       throw new Error("User not found");
-    }
+    };
 
-    log.info(`User with ID ${userId} deleted successfully`);
+    return deleteUser;
   }
 }
 
