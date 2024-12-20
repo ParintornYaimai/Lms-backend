@@ -10,4 +10,4 @@ const noteSchemaModel = new Schema<noteTypeModel>({
     comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
 },{timestamps:true})
 
-export const noteModel = mongoose.model<noteTypeModel>('Note', noteSchemaModel);
+export const NoteModel = mongoose.model<noteTypeModel>('Note', noteSchemaModel);

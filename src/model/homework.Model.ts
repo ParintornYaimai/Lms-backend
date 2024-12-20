@@ -10,5 +10,5 @@ const homeworkSchema = new Schema<homeworkTypeModel>({
     }],
 }, { timestamps: true });
 
-export const AssignmentModel = mongoose.model<homeworkTypeModel>("Homework", homeworkSchema);
+export const HomeworkModel = mongoose.model<homeworkTypeModel>("Homework", homeworkSchema);
 
