@@ -1,6 +1,11 @@
 import { UpdateUserRequestType } from "../../types/user.type";
 import { userModel } from "../../model/user.Model";
 import log from '../../util/logger';
+import mongoose from "mongoose";
+import { CommentModel } from "../../model/comment.Model";
+import { NoteModel } from "../../model/note.Model";
+import { AssignmentModel } from "../../model/assignment.Model";
+import { HomeworkModel } from "../../model/homework.Model";
 
 class UserService {
 
@@ -33,15 +38,33 @@ class UserService {
     return savedUser;
   }
 
-  async deleteUser(userId: string) {  
-    
-    const deleteUser = await userModel.findByIdAndDelete(userId);
+  async deleteUser(userId: string) {
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    if (!deleteUser) {
-      throw new Error("User not found");
-    };
+  
+    try {
+      const deleteUser = await userModel.findByIdAndDelete(userId, { session });
+  
+      if (!deleteUser) {
+        throw new Error("User not found");
+      }
+  
+      await CommentModel.deleteMany({ userId }, { session });
+      await HomeworkModel.deleteMany({ userId }, { session });
+      await NoteModel.deleteMany({ userId }, { session });
+      await AssignmentModel.deleteMany({ userId }, { session });
+  
+      await session.commitTransaction();
+      return deleteUser;
+    } catch (error) {
 
-    return deleteUser;
+      await session.abortTransaction();
+      throw error;
+    } finally {
+
+      session.endSession();
+    }
   }
 }
 
