@@ -11,6 +11,7 @@ const userSchemaModel = new Schema<userTypeModel>({
     courses:[{ type: Schema.Types.ObjectId, ref: 'Course' }], 
     notes: [{ type: Schema.Types.ObjectId, ref: 'Note' }],
     comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
+    assignments: [{ type: Schema.Types.ObjectId, ref: "Assignment" }],
     profilepicture: {type: String, default:null},
     refreshTokens: [{ token: String, expiresAt: Date }]
 },{timestamps:true})

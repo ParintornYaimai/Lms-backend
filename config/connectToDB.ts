@@ -16,8 +16,7 @@ const connectToDb = async()=>{
         log.info('Database connection successful')
 
     } catch (error: any) {
-        log.error("An error occurred while connecting to the database.", error.message)
-
+        log.error(`An error occurred while connecting to the database.${error.message}`, )
         process.exit(1)
     }
 }

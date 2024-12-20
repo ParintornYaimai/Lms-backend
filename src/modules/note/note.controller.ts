@@ -10,7 +10,7 @@ import { CreateNote, GetNoteByTag, UpdateNote, } from 'src/schema/note.sechema';
 
 class noteController{
 
-    async getAll(req: Request, res: Response){
+    async getAll(req: Request, res: Response):Promise<void>{
         try {
             const data = await noteService.getAll();
 

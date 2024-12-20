@@ -9,6 +9,7 @@ export interface userTypeModel {
     courses?: Types.ObjectId[]
     notes?: Types.ObjectId[]
     comments?: Types.ObjectId[]
+    assignments?: Types.ObjectId[]
     profilepicture?: string
     refreshTokens?: { token: string; expiresAt: Date }[];
 }

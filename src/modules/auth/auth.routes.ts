@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.post('/sign-up',validate(registerSchema),authController.register);
 router.post('/sign-in',validate(loginSchema),authController.login)
-router.post('/logout',validate(logoutSchema),authenticateToken,authController.logout)
+router.post('/sign-out',validate(logoutSchema),authenticateToken,authController.logout)
 
 router.post('/refresh-token',authenticateToken,authController.refreshtoken)
 

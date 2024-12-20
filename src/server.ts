@@ -14,6 +14,7 @@ import { initializeSocket } from './socket/socket';
 import authRouter from './modules/auth/auth.routes'
 import noteRouter from './modules/note/note.routes'
 import commentRouter from './modules/comment/comment.routes'
+import assignmentRouter from './modules/assignments/assignment.routes'
 import { authenticateToken } from './util/token';
 
 dotenv.config();
@@ -51,6 +52,7 @@ app.set('socketIO', io);
 app.use('/api/auth',authRateLimiter,authRouter);
 app.use('/api/note',publicRateLimiter,authenticateToken,noteRouter);
 app.use('/api/comment',publicRateLimiter,authenticateToken,commentRouter);
+app.use('/api/assignment',publicRateLimiter,authenticateToken,assignmentRouter)
 
 
 const port = process.env.PORT || 8080

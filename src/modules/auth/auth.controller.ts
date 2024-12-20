@@ -19,7 +19,7 @@ class authController{
         }
     }
 
-    async login(req: Request<{}, {}, Login>, res: Response):Promise<void>{ 
+    async login(req: Request<Login>, res: Response):Promise<void>{ 
         try {
             const {email,password} = req.body;
             const {accessToken,refreshToken} = await authService.login({email,password});
