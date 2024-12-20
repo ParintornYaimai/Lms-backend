@@ -16,6 +16,8 @@ import noteRouter from './modules/note/note.routes'
 import commentRouter from './modules/comment/comment.routes'
 import assignmentRouter from './modules/assignments/assignment.routes'
 import { authenticateToken } from './util/token';
+import userRouter from '../src/modules/user/user.routes';
+
 
 dotenv.config();
 
@@ -53,6 +55,7 @@ app.use('/api/auth',authRateLimiter,authRouter);
 app.use('/api/note',publicRateLimiter,authenticateToken,noteRouter);
 app.use('/api/comment',publicRateLimiter,authenticateToken,commentRouter);
 app.use('/api/assignment',publicRateLimiter,authenticateToken,assignmentRouter)
+app.use('/api/user', publicRateLimiter, userRouter);
 
 
 const port = process.env.PORT || 8080
