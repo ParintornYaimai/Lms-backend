@@ -5,8 +5,6 @@ export const registerSchema = z.object({
     lastname: z.string().min(5,'A lastname must be specified and must be longer than 3 characters.'),
     email: z.string().email("Invalid email address"),
     password: z.string().min(8,"Password must be at least 8 characters long"),
-    role: z.string().default('student'),
-    courses: z.array(z.string()).optional(),
 })
 
 export const loginSchema = z.object({

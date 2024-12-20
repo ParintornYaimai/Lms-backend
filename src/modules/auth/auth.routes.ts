@@ -3,7 +3,7 @@ import { loginSchema, logoutSchema, registerSchema, } from '../../schema/auth.se
 import  validate  from '../../util/validate';
 import authController from './auth.controller'
 // import { upload } from '../../../config/cloudinary';
-import {authenticateToken} from '../../util/token'
+import {authenticateToken} from '../../middleware/authenticateToken'
 
 const router = express.Router();
 

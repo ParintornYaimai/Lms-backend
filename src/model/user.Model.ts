@@ -5,6 +5,13 @@ import {userTypeModel,secretTypeModel} from "../types/user.type"
 const userSchemaModel = new Schema<userTypeModel>({
     firstname:{type: String, required:true},
     lastname:{type: String, required:true},
+    welcomeMessage:{type: String, default:'Welcome!'},
+    language:{type: String, default:'th' },
+    dateFormat:{type: String, default:'YYYY-MM-DD' },
+    timeFormat:{type: String, default:'24-hour' },
+    country:{type: String, default:'TH'},
+    timeZone:{type: String, default:'UTC'},
+    currentTime:{type: String,default:'default-time' },
     email:{type: String, required:true},
     password:{type: String, required:true},
     role:{type: String,default:'student'},

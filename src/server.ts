@@ -15,7 +15,7 @@ import authRouter from './modules/auth/auth.routes'
 import noteRouter from './modules/note/note.routes'
 import commentRouter from './modules/comment/comment.routes'
 import assignmentRouter from './modules/assignments/assignment.routes'
-import { authenticateToken } from './util/token';
+import { authenticateToken } from './middleware/authenticateToken';
 import userRouter from '../src/modules/user/user.routes';
 
 
@@ -55,7 +55,7 @@ app.use('/api/auth',authRateLimiter,authRouter);
 app.use('/api/note',publicRateLimiter,authenticateToken,noteRouter);
 app.use('/api/comment',publicRateLimiter,authenticateToken,commentRouter);
 app.use('/api/assignment',publicRateLimiter,authenticateToken,assignmentRouter)
-app.use('/api/user', publicRateLimiter, userRouter);
+app.use('/api/user', publicRateLimiter,authenticateToken,userRouter);
 
 
 const port = process.env.PORT || 8080
