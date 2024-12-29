@@ -1,7 +1,9 @@
 import mongoose from "mongoose";
 import log from "../src/util/logger";
+import { GridFSBucket } from 'mongodb';
 
 
+let gfs: GridFSBucket
 const connectToDb = async()=>{
     
     const URL = `mongodb+srv://lmsproject442:${process.env.DATABASEPASSWORD}@cluster0.nvb7u.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0` as string
@@ -15,10 +17,20 @@ const connectToDb = async()=>{
         await mongoose.connect(URL)
         log.info('Database connection successful')
 
+        const conn = mongoose.connection;
+        if(conn.db){
+            gfs = new GridFSBucket(conn.db, {
+              bucketName: 'uploads',
+            });
+            log.info('GridFSBucket created successfully');
+        }else{
+            throw new Error('Database connection is not established properly.');
+        }
+
     } catch (error: any) {
         log.error(`An error occurred while connecting to the database.${error.message}`, )
         process.exit(1)
     }
 }
 
-export default connectToDb
+export { connectToDb, gfs };

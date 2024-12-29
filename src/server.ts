@@ -3,7 +3,7 @@ import http from 'http';
 import cors, { CorsOptions } from 'cors'
 import dotenv from 'dotenv'
 import cookiePaser from 'cookie-parser'
-import connectToDb from '../config/connectToDB';
+import {connectToDb} from '../config/connectToDB';
 import log from '../src/util/logger'
 import {initRedis} from '../config/connectToRedis'
 import generatesecret from './util/cornJob'
@@ -17,6 +17,7 @@ import commentRouter from './modules/comment/comment.routes'
 import assignmentRouter from './modules/assignments/assignment.routes'
 import { authenticateToken } from './middleware/authenticateToken';
 import userRouter from '../src/modules/user/user.routes';
+import upload from './modules/uploadFile/uploadFile.routes'
 
 
 dotenv.config();
@@ -49,13 +50,13 @@ app.set('socketIO', io);
 
 
 
-
 //route
 app.use('/api/auth',authRateLimiter,authRouter);
 app.use('/api/note',publicRateLimiter,authenticateToken,noteRouter);
 app.use('/api/comment',publicRateLimiter,authenticateToken,commentRouter);
 app.use('/api/assignment',publicRateLimiter,authenticateToken,assignmentRouter)
 app.use('/api/user', publicRateLimiter,authenticateToken,userRouter);
+app.use('/api/upload',publicRateLimiter,authenticateToken,upload)
 
 
 const port = process.env.PORT || 8080
