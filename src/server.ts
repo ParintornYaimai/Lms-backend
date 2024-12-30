@@ -17,7 +17,7 @@ import commentRouter from './modules/comment/comment.routes'
 import assignmentRouter from './modules/assignments/assignment.routes'
 import { authenticateToken } from './middleware/authenticateToken';
 import userRouter from '../src/modules/user/user.routes';
-import upload from './modules/uploadFile/uploadFile.routes'
+import upload from './modules/file/file.routes'
 
 
 dotenv.config();
@@ -56,7 +56,7 @@ app.use('/api/note',publicRateLimiter,authenticateToken,noteRouter);
 app.use('/api/comment',publicRateLimiter,authenticateToken,commentRouter);
 app.use('/api/assignment',publicRateLimiter,authenticateToken,assignmentRouter)
 app.use('/api/user', publicRateLimiter,authenticateToken,userRouter);
-app.use('/api/upload',publicRateLimiter,authenticateToken,upload)
+app.use('/api/file',publicRateLimiter,authenticateToken,upload)
 
 
 const port = process.env.PORT || 8080
