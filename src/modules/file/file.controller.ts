@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import log from "../../util/logger";
-import uploadService from "./uploadFile.service";
+import uploadService from "./file.service";
 
 class uploadController{
 
@@ -25,6 +25,23 @@ class uploadController{
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
             log.error(error.message);
         }
+    }
+    
+    async getById(req: Request<{id: string},{},{},{}>, res: Response){
+       try {
+            const id = req.params.id;
+            const data = await uploadService.getById(id);
+
+            data.pipe(res)
+
+            data.on('error', (err)=>{
+                throw new Error('Error while downloading file');
+            });
+       }catch(error: any){
+            res.status(500).json({success: false,message:error.message,error:'Internal server error'});
+            log.error(error.message);
+       }
+        
     }
 }
 

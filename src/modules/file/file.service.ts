@@ -1,5 +1,6 @@
 import { Readable } from 'stream';
 import { gfs } from '../../../config/connectToDB';
+import mongoose from 'mongoose';
 
 
 class uploadService {
@@ -45,6 +46,22 @@ class uploadService {
 
             chunks.forEach(uploadChunk);
         });
+    }
+
+    async getById(id: string){
+        if(!gfs){
+            throw new Error('GridFSBucket is not initialized');
+        }
+
+        if(!id) throw new Error('Id is required')
+
+        const file = await gfs.find({ _id: new mongoose.Types.ObjectId(id) }).toArray();
+        if (!file || file.length === 0) {
+            throw new Error('File not found')
+        }
+
+        return gfs.openDownloadStream(new mongoose.Types.ObjectId(id));
+  
     }
 }
 
