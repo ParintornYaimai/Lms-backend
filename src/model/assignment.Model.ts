@@ -1,39 +1,46 @@
 import mongoose, { Schema } from "mongoose";
 import { assignmentTypeModel } from "src/types/assignment.type";
 
-
+// one-to-many
 const assignmentSchema = new Schema<assignmentTypeModel>({
-    homeworkId: [{ type: Schema.Types.ObjectId, ref:"Homework" , required: true}],
-    createdbyteacher:{type: Schema.Types.ObjectId, ref:"Homework" , required: true},
     subject: { type: Schema.Types.ObjectId, required: true },
-    course: [{ type: Schema.Types.ObjectId, ref: "Course", required: true }],
+    course: { type: Schema.Types.ObjectId, ref:"Course" ,required: true, },
     passpercen: { type: Number, required: true },
     schedule: { 
-        type: [Date], 
-        required: true,
+        start: { type: Date, required: true },
+        end: { type: Date, required: true }
     },
     endDate: { 
-        type: [Date], 
-        required: true,
+        start: { type: Date, required: true },
+        end: { type: Date, required: true }
     },
-    files: [{
-       type: String
+    files: [ {
+        url: { type: String, required: true },
+        type: { type: String, enum: ["pdf", "doc", "docx", "ppt", "pptx", "jpg", "jpeg","png",], required: true },
+        size: { type: Number } // ขนาดไฟล์ KB/MB
     }],
-    score:{
-        type: String
-    },
-    status:{
-        type: String
-    },
+    submissions: [{
+        studentId: {
+            type: Schema.Types.ObjectId,
+            ref: "User",  
+            required: true
+        },
+        score: { type: Number, default: 0 },
+        file: [{ type: String, default: null }], 
+        status: { type: String, enum: ['not_submitted', 'submitted','graded','overdue'], default: 'not_submitted' },
+    }],
+    score: { type: Number, default: 0 },
+    status: { type: String, enum: ['Pending', 'Progress', 'Done',], default: 'Pending' },
+    action: [{type: String}]
 }, { timestamps: true });
 
 assignmentSchema.methods.validateDates = function() {
-    if (this.schedule.length !== 2 || this.schedule[0] >= this.schedule[1]) {
-        throw new Error('The information is incorrect.');
+    if (this.schedule.start >= this.schedule.end) {
+        throw new Error('Schedule start date must be before the end date.');
     }
-    if (this.endDate.length !== 2 || this.endDate[0] <= this.schedule[1] || this.endDate[1] <= this.schedule[1]) {
-        throw new Error('The information is incorrect.');
-    }
+    if (this.endDate.start <= this.schedule.end || this.endDate.end <= this.schedule.end) {
+        throw new Error('EndDate must be after the schedule end date.');
+      }
 };
 
 export const AssignmentModel = mongoose.model<assignmentTypeModel>("Assignment", assignmentSchema);
