@@ -1,11 +1,10 @@
 import { UpdateUserRequestType } from "../../types/user.type";
 import { userModel } from "../../model/user.Model";
-import log from '../../util/logger';
 import mongoose from "mongoose";
 import { CommentModel } from "../../model/comment.Model";
 import { NoteModel } from "../../model/note.Model";
 import { AssignmentModel } from "../../model/assignment.Model";
-import { HomeworkModel } from "../../model/homework.Model";
+
 
 class UserService {
 
@@ -34,7 +33,6 @@ class UserService {
       throw new Error("Failed to save updated user");
     }
 
-    log.info(`User with ID ${userId} updated successfully`);
     return savedUser;
   }
 
@@ -51,7 +49,7 @@ class UserService {
       }
   
       await CommentModel.deleteMany({ userId }, { session });
-      await HomeworkModel.deleteMany({ userId }, { session });
+      // await HomeworkModel.deleteMany({ userId }, { session });
       await NoteModel.deleteMany({ userId }, { session });
       await AssignmentModel.deleteMany({ userId }, { session });
   

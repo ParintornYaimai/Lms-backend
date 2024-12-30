@@ -6,11 +6,13 @@ class userController {
 
   async getUser(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).user.id;
+      // const userId = (req as any).user.id;
+      const userId = req.user.id;
       
-      const user = await userService.getUser(userId);
+      const data = await userService.getUser(userId);
 
-      res.status(200).json({ success: true, user });
+      req.app.get('socketIO').emit('user:get',data );
+      res.status(200).json({ success: true, data });
     } catch (error: any) {
       res.status(500).json({success: false,message:error.message,error:'Internal server error'});
       log.error(error.message);
@@ -20,10 +22,11 @@ class userController {
   async updateUser(req: Request, res: Response): Promise<void> {
     try {
       const {firstname, lastname, welcomeMessage, language, dateFormat, timeFormat, country, timeZone, currentTime} = req.body;
-      const userId = (req as any).user.id;
+      const userId = req.user.id;
 
-      const updatedUser = await userService.updateUser({userId, firstname, lastname, welcomeMessage, language, dateFormat, timeFormat, country, timeZone, currentTime});
+      const data = await userService.updateUser({userId, firstname, lastname, welcomeMessage, language, dateFormat, timeFormat, country, timeZone, currentTime});
 
+      req.app.get('socketIO').emit('user:update',data );
       res.status(200).json({success: true, message: "User updated successfully"});
     } catch (error: any) {
       res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -33,10 +36,11 @@ class userController {
 
   async deleteUser(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).user.id;
+      const userId = req.user.id;
       
-      await userService.deleteUser(userId);
+      const data = await userService.deleteUser(userId);
 
+      req.app.get('socketIO').emit('user:delete',data );
       res.status(200).json({success: true, message: 'User deleted successfully'});
     } catch (error: any) {
       res.status(500).json({success: false,message:error.message,error:'Internal server error'});

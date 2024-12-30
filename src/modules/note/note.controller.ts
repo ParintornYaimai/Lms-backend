@@ -37,7 +37,7 @@ class noteController{
 
     async getNoteByIdForAccountOwner(req: Request, res: Response):Promise<void>{
         try {
-            const id = (req as any).user.id;  
+            const id = req.user.id;  
             const data = await noteService.getByIdForAccountId({id});
 
             req.app.get('socketIO').emit('note:getNoteByIdForAccountOwner',data );
@@ -65,7 +65,7 @@ class noteController{
     async create(req: Request<CreateNote>, res: Response):Promise<void>{
         try {
             const {title, tag, description} = req.body;
-            const id = (req as any).user.id;
+            const id = req.user.id;  
             const data = await noteService.create({title, tag, description, id});
 
             req.app.get('socketIO').emit('note:create',data );
@@ -79,7 +79,7 @@ class noteController{
     async update(req: Request<UpdateNote>, res: Response):Promise<void>{
         try {
             const {id, title, tag, description} = req.body;
-            const {id:accountOwnerId} = (req as any).user;
+            const {id:accountOwnerId} = req.user.id;
             const data = await noteService.update({id, title, tag, description ,accountOwnerId});;
 
             req.app.get('socketIO').emit('note:update',data );
@@ -93,7 +93,7 @@ class noteController{
     async delete(req: Request<{id: string},{},{},{}>, res: Response):Promise<void>{
         try {
             const id = req.params.id
-            const {id:accountOwnerId} = (req as any).user;
+            const {id:accountOwnerId} = req.user.id;
             const data = await noteService.delete({id,accountOwnerId});
 
             req.app.get('socketIO').emit('note:delete',data );

@@ -8,7 +8,7 @@ export const checkRole = (allowedRoles: [string]) => (req: Request, res: Respons
     return res.status(401).json({ message: "Unauthorized: No role provided" });
   }
 
-  if (!allowedRoles.includes(userRole)) {
+  if (!allowedRoles.includes(userRole) ) {
     return res.status(403).json({ message: "Forbidden: Access denied" });
   }
 
