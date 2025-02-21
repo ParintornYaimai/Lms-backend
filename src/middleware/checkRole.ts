@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 
-// Middleware ตรวจสอบ Role
-export const checkRole = (allowedRoles: [string]) => (req: Request, res: Response, next: NextFunction) => {
-  const userRole = (req as any).user.role;
 
+export const checkRole = (allowedRoles: [string]) => (req: Request, res: Response, next: NextFunction) => {
+  const userRole = req.user.role;
   if (!userRole) {
     return res.status(401).json({ message: "Unauthorized: No role provided" });
   }
