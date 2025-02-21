@@ -1,24 +1,33 @@
 import express from 'express'
 import assignmentController from './assignment.controller';
-import  validate  from '../../util/validate';
-import { assignmentSchema, updateAssignmentSchema } from '../../schema/assignment.schema';
+import  validate  from '../../middleware/validateData';
+import { assignmentSchema, updateAssignmentSchema, updateScoreAssignmentSchema, createAssignmentForStudentSchema } from '../../schema/assignment.schema';
 import { checkRole } from '../../middleware/checkRole';
 
 
 const router = express.Router();
 
 //student
-router.get('/assignments',assignmentController.getAlls) 
-router.post('/assignment',assignmentController.creates) //send homework
-
+router.get('/',assignmentController.getAllSubmission) 
+router.post('/',validate(createAssignmentForStudentSchema),assignmentController.createSubmission) 
 
 
 //teacher
-router.get('/backoffice/:id',checkRole(['teacher']),assignmentController.getById) //get assignment by id and user id assignment
-router.post('/backoffice',checkRole(['teacher']),validate(assignmentSchema),assignmentController.create) //create assignment
-router.patch('/backoffice',checkRole(['teacher']),validate(updateAssignmentSchema),assignmentController.update) //add Score
-router.delete('/backoffice/:id',checkRole(['teacher']),assignmentController.delete) //delete assignment
+router.get('/backoffice',checkRole(['teacher']),assignmentController.getAll) //get assignment by id and user id assignment  
+router.post('/backoffice',checkRole(['teacher']),validate(assignmentSchema),assignmentController.create) //create assignment   
+router.patch('/backoffice/:id',checkRole(['teacher']),validate(updateAssignmentSchema),assignmentController.update) //update assignment  
 
+router.delete('/backoffice/:id',checkRole(['teacher']),assignmentController.delete) 
+
+//score
+router.get('/backoffice/result/:id',checkRole(['teacher']),assignmentController.getResult) //get user for update score 
+router.patch('/backoffice',checkRole(['teacher']),validate(updateScoreAssignmentSchema),assignmentController.updateScore) //add Score 
 
 
 export default router;
+
+
+
+
+
+
