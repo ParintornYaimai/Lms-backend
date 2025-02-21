@@ -7,13 +7,13 @@ class uploadService {
     
 
     async upload(buffer: Buffer, filename: string){
-        console.log('upload active');
+
 
         return new Promise((resolve, reject)=>{
             const chunkSize = 1 * 1024 * 1024; // chunk size
             const chunks = []; // chunk array
 
-            for (let i = 0; i < buffer.length; i += chunkSize) {
+            for(let i = 0; i < buffer.length; i += chunkSize){
                 chunks.push(buffer.slice(i, i + chunkSize));
             }
 
