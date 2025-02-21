@@ -1,17 +1,16 @@
 import { z } from "zod";
 
-// Schema สำหรับ User
-export const userSchema = z.object({
-  userId: z.number(),
-  name: z.string().min(1),
-  welcomeMessage: z.string(),
-  language: z.string().min(2),
-  dateFormat: z.string(),
-  timeFormat: z.string(),
-  country: z.string(),
-  timeZone: z.string(), 
-  currentTime: z.string(),
-});
+// export const userSchema = z.object({
+//   userId: z.number(),
+//   name: z.string().min(1),
+//   welcomeMessage: z.string(),
+//   language: z.string().min(2),
+//   dateFormat: z.string(),
+//   timeFormat: z.string(),
+//   country: z.string(),
+//   timeZone: z.string(), 
+//   currentTime: z.string(),
+// });
 
 export const updateUserSchema = z.object({
   firstname: z.string().min(1).optional(),
@@ -25,5 +24,5 @@ export const updateUserSchema = z.object({
   currentTime: z.string().optional(),
 });
 
-export type User = z.infer<typeof userSchema>;
+// export type User = z.infer<typeof userSchema>;
 export type UpdateUserRequest = z.infer<typeof updateUserSchema>;

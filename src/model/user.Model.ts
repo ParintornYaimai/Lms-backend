@@ -1,27 +1,26 @@
 import mongoose, { Schema } from "mongoose";
-import {userTypeModel,secretTypeModel} from "../types/user.type"
+import { userTypeModel, secretTypeModel } from "../types/user.type"
 
 
 const userSchemaModel = new Schema<userTypeModel>({
-    firstname:{type: String, required:true},
-    lastname:{type: String, required:true},
-    welcomeMessage:{type: String, default:'Welcome!'},
-    language:{type: String, default:'th' },
-    dateFormat:{type: String, default:'YYYY-MM-DD' },
-    timeFormat:{type: String, default:'24-hour' },
-    country:{type: String, default:'TH'},
-    timeZone:{type: String, default:'UTC'},
-    currentTime:{type: String,default:'default-time' },
-    email:{type: String, required:true},
-    password:{type: String, required:true},
-    role:{type: String,default:'student'},
-    courses:[{ type: Schema.Types.ObjectId, ref: 'Course' }], 
+    firstname: { type: String, required: true },
+    lastname: { type: String, required: true },
+    welcomeMessage: { type: String, default: 'Welcome!' },
+    language: { type: String, default: 'th' },
+    dateFormat: { type: String, default: 'YYYY-MM-DD' },
+    timeFormat: { type: String, default: '24-hour' },
+    country: { type: String, default: 'TH' },
+    timeZone: { type: String, default: 'UTC' },
+    currentTime: { type: String, default: 'default-time' },
+    email: { type: String, required: true ,unique: true },
+    password: { type: String, required: true },
+    role: { type: String, default: 'student' },
     notes: [{ type: Schema.Types.ObjectId, ref: 'Note' }],
     comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
     assignments: [{ type: Schema.Types.ObjectId, ref: "Assignment" }],
-    profilepicture: {type: String, default:null},
+    profilepicture: { type: String, default: null },
     refreshTokens: [{ token: String, expiresAt: Date }]
-},{timestamps:true})
+}, { timestamps: true })
 
 const secretSchema = new Schema<secretTypeModel>({
     currentSecret: { type: String, required: true },
@@ -29,9 +28,9 @@ const secretSchema = new Schema<secretTypeModel>({
         secret: { type: String, required: true },
         expiresAt: { type: Date, required: true }
     }]
-},{timestamps:true});
+}, { timestamps: true });
 
 
 export const userModel = mongoose.model<userTypeModel>('User', userSchemaModel);
-export const secretModel  = mongoose.model<secretTypeModel>('Secret', secretSchema);
+export const secretModel = mongoose.model<secretTypeModel>('Secret', secretSchema);
 

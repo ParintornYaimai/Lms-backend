@@ -7,7 +7,6 @@ import { AssignmentModel } from "../../model/assignment.Model";
 
 
 class UserService {
-
   async getUser(userId: string) {
     const userData = await userModel.findById(userId).select('-password -refreshTokens');
     

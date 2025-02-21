@@ -1,6 +1,6 @@
 import express from "express";
 import userController from "../user/user.controller";
-import validate from "../../util/validate";
+import validate from "../../middleware/validateData";
 import { updateUserSchema } from "../../schema/user.schema";
 
 const router = express.Router();
