@@ -6,7 +6,7 @@ import cookiePaser from 'cookie-parser'
 import {connectToDb} from '../config/connectToDB';
 import log from '../src/util/logger'
 import {initRedis} from '../config/connectToRedis'
-import generatesecret from './util/cornJob'
+import scheduleJobs from './crons/scheduleJobs'
 import {authRateLimiter, publicRateLimiter} from './util/rateLimit'
 import { initializeSocket } from './socket/socket';
 
@@ -18,6 +18,13 @@ import assignmentRouter from './modules/assignments/assignment.routes'
 import { authenticateToken } from './middleware/authenticateToken';
 import userRouter from '../src/modules/user/user.routes';
 import upload from './modules/file/file.routes'
+import course from './modules/courses/course.routes'
+import enrolle from './modules/enrolle/enrolled.routes'
+import feedback from './modules/feedback/feedback.routes'
+import addfriends from './modules/addfriend/addfriends.routes'
+import chat from './modules/chat/chat.routes'
+import message from './modules/message/message.routes'
+// import errorHandler from './middleware/errorHandler';
 
 
 dotenv.config();
@@ -57,12 +64,17 @@ app.use('/api/comment',publicRateLimiter,authenticateToken,commentRouter);
 app.use('/api/assignment',publicRateLimiter,authenticateToken,assignmentRouter)
 app.use('/api/user', publicRateLimiter,authenticateToken,userRouter);
 app.use('/api/file',publicRateLimiter,authenticateToken,upload)
-
+app.use('/api/course',publicRateLimiter,authenticateToken,course)
+app.use('/api/enrolle',publicRateLimiter,authenticateToken,enrolle)
+app.use('/api/feedback',publicRateLimiter,authenticateToken,feedback)
+app.use('/api/addfriend',publicRateLimiter,authenticateToken,addfriends)
+app.use('/api/chat',publicRateLimiter,authenticateToken,chat)
+app.use('/api/message',publicRateLimiter,authenticateToken,message)
 
 const port = process.env.PORT || 8080
 app.listen(port,async()=> {
     log.info(`server start on port: ${port}`)
     await connectToDb()
     await initRedis()
-    generatesecret()
+    scheduleJobs ()
 })
