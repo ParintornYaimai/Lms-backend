@@ -1,6 +1,6 @@
 import { Server } from 'socket.io';
 import http from 'http';
-// import { socketRoutes } from './socketRoutes'; 
+import { socketRoutes } from './socketRoutes'; 
 
 
 export const initializeSocket = (server: http.Server) => {
@@ -11,7 +11,7 @@ export const initializeSocket = (server: http.Server) => {
       credentials: true 
     },
   });
-  // socketRoutes(io);
+  socketRoutes(io);
   return io;
 };
 

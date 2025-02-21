@@ -1,16 +1,15 @@
-// import { Server } from 'socket.io';
-// import log from '../util/logger';
-// import {noteHandlers} from './note.Socket';
-// // import {commentHandlers} from './comment.Socket'
+import { Server } from 'socket.io';
+import log from '../util/logger';
+import {chatHandler} from './chat.Socket';
+// import {commentHandlers} from './comment.Socket'
 
-// export const socketRoutes = (io: Server) => {
-//   io.on('connection', (socket) => {
+export const socketRoutes = (io: Server) => {
+    io.on('connection', (socket) => {
 
-//     noteHandlers(io, socket);
-//     // commentHandlers(io, socket);
+        chatHandler(io, socket);
 
-//     socket.on('disconnect', () => {
-//       log.info('User disconnected')
-//     });
-//   });
-// };
+        socket.on('disconnect', () => {
+            log.info('User disconnected')
+        });
+    });
+};
