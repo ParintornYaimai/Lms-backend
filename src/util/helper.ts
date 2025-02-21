@@ -1,7 +1,7 @@
 import mammoth from 'mammoth';
 import pdfParse from 'pdf-parse';
 import JSZip from 'jszip';
-import vision, { ImageAnnotatorClient } from '@google-cloud/vision';
+import vision from '@google-cloud/vision';
 import sharp from 'sharp';
 import log from './logger';
 import axios from 'axios';
@@ -13,8 +13,8 @@ export const checkDocxContent = async (fileBuffer: Buffer): Promise<boolean> => 
     try {
         const { value: textContent } = await mammoth.extractRawText({ buffer: fileBuffer });
         const dangerousKeywords = [
-            '<script>', 'eval(', 'alert(', 'document.write', 'window.location', 'setTimeout(', 
-            'setInterval(', '<object>', '<embed>', '<iframe>', 'window', 'document.cookie', 'Function('
+            'eval(', 'alert(', 'document.write', 'window.location', 
+            '<object>', '<embed>', '<iframe>', 'window', 'document.cookie', 
         ];
 
         let isSafe = true;
@@ -37,9 +37,9 @@ export const checkPDFContent = async(fileBuffer: Buffer): Promise<boolean>=>{
         const textContent = data.text;
 
         const dangerousKeywords = [
-            '<script>', 'eval(', 'alert(', 'document.write', 'window.location', 'setTimeout(', 
-            'setInterval(', '<object>', '<embed>', '<iframe>', 'window', 'document.cookie', 'Function('
-        ];
+            'eval(', 'alert(', 'document.write', 'window.location', 
+            '<object>', '<embed>', '<iframe>', 'window', 'document.cookie', 
+        ];;
 
         let isSafe = true;
         dangerousKeywords.forEach((keyword) => {
@@ -72,8 +72,8 @@ export const checkPptxContent = async(fileBuffer: Buffer): Promise<boolean>=>{
         let textContent = allSlidesContent.join(' ');
 
         const dangerousKeywords = [
-            '<script>', 'eval(', 'alert(', 'document.write', 'window.location', 'setTimeout(', 
-            'setInterval(', '<object>', '<embed>', '<iframe>', 'window', 'document.cookie', 'Function('
+            'eval(', 'alert(', 'document.write', 'window.location', 
+            '<object>', '<embed>', '<iframe>', 'window', 'document.cookie', 
         ];
 
         let isSafe = true;
@@ -178,9 +178,7 @@ export const checkForVirus =async(fileBuffer: Buffer,fileName: string)=>{
         const stats = analysisResponse.data.data.attributes.stats;
         const positives = stats.malicious + stats.suspicious;
 
-        if(positives > 0){
-            throw new Error('File contains malicious content');
-        }
+        if(positives > 0) throw new Error('File contains malicious content');
         
         return true;
     }catch(error: any){
