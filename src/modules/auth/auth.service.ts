@@ -104,10 +104,14 @@ class AuthService{
         const userData = await this.verifyWithDynamicSecret(refreshTokenInput);
         const user = await userModel.findById(userData.id);
 
-        if (!user || !user?.refreshTokens || !user.refreshTokens.some((t) => t.token === refreshTokenInput)) {
+        if(!user || !user?.refreshTokens || !user.refreshTokens.some((t) => t.token === refreshTokenInput)) {
             throw new Error('Invalid refresh token')
         }
 
+        const now = new Date();
+        user.refreshTokens = user.refreshTokens.filter(t => new Date(t.expiresAt) > now);
+        await user.save();
+        
         return await generateAccessToken(user);
     }
 

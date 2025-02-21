@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response ,NextFunction} from 'express';
 import authService from './auth.service';
 import { Register,Login, Logout } from 'src/schema/auth.sechema';
 // import { upload } from 'config/cloudinary';

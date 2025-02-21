@@ -1,6 +1,6 @@
 import express from 'express'
 import { loginSchema, logoutSchema, registerSchema, } from '../../schema/auth.sechema';
-import  validate  from '../../util/validate';
+import  validate  from '../../middleware/validateData';
 import authController from './auth.controller'
 // import { upload } from '../../../config/cloudinary';
 import {authenticateToken} from '../../middleware/authenticateToken'
