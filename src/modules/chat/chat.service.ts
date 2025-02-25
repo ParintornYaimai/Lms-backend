@@ -6,8 +6,7 @@ import mongoose, { Types } from 'mongoose';
 class chatService{
 
     async getAllFriends(userId: string){
-        console.log("UserID ",userId);
-        
+
         const friends = await AddFriendReqModel.find({
             $or: [
                 { fromUser: userId},
@@ -31,17 +30,17 @@ class chatService{
 
         const chatsWithLatestMessage = await Promise.all(
             allChats.map(async (chat) => {
-                if('sender' in chat && 'receiver' in chat) {
+                if('sender' in chat && 'receiver' in chat){
                     const latestMessage = await MessageModel.findOne({ chatroom: chat._id })
                     .sort({ createdAt: -1 })
                     .select('-_id -chatroom -createdAt -updatedAt ')
                     .populate('receiver','username email profilepicture')
                     .populate('sender','username email profilepicture')
                     .lean();
-
+                    
                     return { ...chat.toObject(), latestMessage };
                     
-                }else if ('people' in chat) {
+                }else if ('people' in chat){
                     const latestMessage = await MessageModel.findOne({ chatroom: chat._id })
                     .sort({ createdAt: -1 })
                     .select('-_id -chatroom -createdAt -updatedAt')
@@ -55,7 +54,7 @@ class chatService{
                 return null;
             })
         );
-
+        
         const sortedChats = chatsWithLatestMessage.sort((a, b) => {
             if(a && b){
                 const aTime = a.latestMessage?.createdAt?.getTime() || 0;
@@ -64,7 +63,7 @@ class chatService{
             }
             return 0; 
         });
-      
+        
         return sortedChats;
     }   
 
@@ -98,20 +97,20 @@ class chatService{
     
         const newPeopleId = peopleId.map((id) => ({ user: new Types.ObjectId(id) }));
     
-        if (checkChat) {
+        if(checkChat){
             const existingMembers = checkChat.people.map((member) => member.user.toString());
             const membersToAdd = newPeopleId.filter(
                 (newMember) => !existingMembers.includes(newMember.user.toString())
             );
             
-            if (membersToAdd.length > 0) {
+            if(membersToAdd.length > 0){
                 checkChat.people.push(...membersToAdd);
                 const result = await checkChat.save();
                 return result;
-            } else {
+            }else{
                 return checkChat; 
             }
-        } else {
+        }else{
             const createGroupChat = await ChatgroupModel.create({
                 members: newPeopleId
             });
@@ -120,34 +119,39 @@ class chatService{
     }
 
 
-    async delete(chatId: string) {
+    async delete(chatId: string, userId: string) {
         const session = await mongoose.startSession();
         session.startTransaction();
-
+    
         try {
-            const checkChat = await ChatModel.findById(chatId).session(session);
-            
-            let chatData;
-            if(checkChat){
-                chatData = await ChatModel.findByIdAndDelete(chatId).session(session);
-            }else {
-                chatData = await ChatgroupModel.findByIdAndDelete(chatId).session(session);
+            const chat = await ChatModel.findById(chatId).session(session);
+            const chatGroup = await ChatgroupModel.findById(chatId).session(session);
+    
+            if(chat){
+                if(chat.sender.toString() === userId || chat.receiver.toString() === userId){
+                    await ChatModel.findByIdAndUpdate(chatId, {
+                        $set: { isDeleted: true } 
+                    }).session(session);
+                }
+            }else if(chatGroup){
+
+                chatGroup.people = chatGroup.people.filter((p: any) => p.user.toString() !== userId);
+                await chatGroup.save({ session });
+            }else{
+                throw new Error("Chat not found");
             }
-            await MessageModel.deleteMany({ chatId }).session(session);
-
-
+    
             await session.commitTransaction();
             session.endSession();
-
-            return chatData;
-        } catch (error) {
-
+    
+            return { success: true, message: "You have left the chat." };
+        }catch(error){
             await session.abortTransaction();
             session.endSession();
             throw error;
         }
     }
-
+    
 }
 
 
