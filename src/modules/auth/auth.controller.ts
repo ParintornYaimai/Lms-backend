@@ -10,7 +10,19 @@ class authController{
     async register(req: Request<{},{},Register>, res: Response):Promise<void>{
         try {
             const {firstname, lastname, email, password} = req.body;
-            const createUserData = await authService.create({firstname, lastname, email, password});
+            await authService.create({firstname, lastname, email, password});
+
+            res.status(201).json({success: true,message: 'register successfully'});
+        } catch (error:any) {
+            res.status(500).json({success: false,message:error.message,error:'Internal server error'})
+            log.error(error.message);
+        }
+    }
+
+    async registerForTeacher(req: Request, res: Response):Promise<void>{
+        try {
+            const {firstname, lastname, email, password} = req.body;
+            await authService.createForTeacher({firstname, lastname, email, password});
 
             res.status(201).json({success: true,message: 'register successfully'});
         } catch (error:any) {

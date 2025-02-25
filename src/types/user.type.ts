@@ -13,7 +13,6 @@ export interface userTypeModel {
     email: string
     password: string
     role?: string
-    courses?: Types.ObjectId[]
     notes?: Types.ObjectId[]
     comments?: Types.ObjectId[]
     assignments?: Types.ObjectId[]

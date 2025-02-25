@@ -6,11 +6,12 @@ import bcrypt from 'bcrypt';
 import crypto from "crypto";
 import { sendOtpEmail } from '../../util/helper';
 import {OtpModel} from '../../model/otp.Model'
+import { TeacherModel } from "../../model/teacher.Model";
 
 class AuthService{
     
     async create(data:userTypeModel ){
-        const {firstname, lastname, email, password, role,courses} = data
+        const {firstname, lastname, email, password, role} = data
         const existUser = await userModel.findOne({email});
         
         if(existUser){
@@ -27,7 +28,6 @@ class AuthService{
                 lastname,
                 email,
                 password: encrypt,
-                courses,
                 role,
             })
             
@@ -39,23 +39,52 @@ class AuthService{
         }
     }
 
-    async login(data:loginTypeModel ){
-        const {email, password} = data
-        const user = await userModel.findOne({email});
-
-        if(user){
-            const isMatch = bcrypt.compareSync(password,user.password)
-            if(!isMatch){
-                throw new Error('Password Invalid')
-            }else{
-                const accessToken = await generateAccessToken(user);
-                const refreshToken = await generateRefreshToken(user);
-                
-                return {accessToken,refreshToken}
-            }
+    async createForTeacher(data:userTypeModel ){
+        const {firstname, lastname, email, password } = data
+        const existUser = await TeacherModel.findOne({email});
+        
+        if(existUser){
+            throw new Error('User already exist')
         }else{
-            throw new Error("User not found")
-        };
+            if(!password) throw new Error('Password is required')
+            
+            //encrypt
+            const salt = await bcrypt.genSalt(10)
+            const encrypt = await bcrypt.hash(password,salt)
+            
+            const newUser = new TeacherModel({
+                firstname,
+                lastname,
+                email,
+                password: encrypt,
+            })
+            
+            await newUser.save();
+            return {
+                success: true,
+                message: "User created successfully",
+            };
+        }
+    }
+
+    async login(data: loginTypeModel) {
+        const { email, password } = data;
+    
+        let user = await userModel.findOne({ email });
+        
+        if(!user) user = await TeacherModel.findOne({ email });
+    
+        if(!user) throw new Error("User not found");
+
+        const isMatch = bcrypt.compareSync(password, user.password);
+        if (!isMatch) {
+            throw new Error("Password Invalid");
+        } else {
+            const accessToken = await generateAccessToken(user);
+            const refreshToken = await generateRefreshToken(user);
+            
+            return { accessToken, refreshToken };
+        }
     }
 
     async loggout (data:logoutTypeModel) {

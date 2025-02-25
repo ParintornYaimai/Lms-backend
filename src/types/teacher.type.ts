@@ -1,8 +1,8 @@
 import { Types } from "mongoose";
 
 export interface TeacherModelType extends Document {
-    firstName: string;
-    lastName: string;
+    firstname: string;
+    lastname: string;
     email: string;
     role: string;
     phoneNumber: string;

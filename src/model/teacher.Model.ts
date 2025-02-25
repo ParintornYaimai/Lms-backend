@@ -2,13 +2,12 @@ import mongoose, { Schema } from "mongoose";
 import { TeacherModelType } from "../types/teacher.type";
 
 const teacherSchema = new Schema<TeacherModelType>({
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
+    firstname: { type: String, required: true },
+    lastname: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     role: { type: String, default: 'teacher' },
-    phoneNumber: { type: String, required: true },
-    department: { type: String, required: true },
-    username: { type: String, required: true, unique: true },
+    phoneNumber: { type: String },
+    department: { type: String },
     password: { type: String, required: true },
     courses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
     assignedAssignments: [{ type: Schema.Types.ObjectId, ref: "Assignment" }],
