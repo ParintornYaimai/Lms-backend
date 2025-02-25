@@ -24,6 +24,8 @@ import feedback from './modules/feedback/feedback.routes'
 import addfriends from './modules/addfriend/addfriends.routes'
 import chat from './modules/chat/chat.routes'
 import message from './modules/message/message.routes'
+import dashboard from './modules/dashboard/dashboard.routes'
+import resource from './modules/resource/resource.routes'
 // import errorHandler from './middleware/errorHandler';
 
 
@@ -70,6 +72,8 @@ app.use('/api/feedback',publicRateLimiter,authenticateToken,feedback)
 app.use('/api/addfriend',publicRateLimiter,authenticateToken,addfriends)
 app.use('/api/chat',publicRateLimiter,authenticateToken,chat)
 app.use('/api/message',publicRateLimiter,authenticateToken,message)
+app.use('/api/dashboard',publicRateLimiter,authenticateToken,dashboard)
+app.use('/api/resource',publicRateLimiter,authenticateToken,resource)
 
 const port = process.env.PORT || 8080
 app.listen(port,async()=> {
