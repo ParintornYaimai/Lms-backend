@@ -8,8 +8,8 @@ import { checkRole } from '../../middleware/checkRole';
 const router = express.Router();
 
 //student
-router.get('/',assignmentController.getAllSubmission) 
-router.post('/',validate(createAssignmentForStudentSchema),assignmentController.createSubmission) 
+router.get('/',checkRole(['student']),assignmentController.getAllSubmission) 
+router.post('/',checkRole(['student']),validate(createAssignmentForStudentSchema),assignmentController.createSubmission) 
 
 
 //teacher

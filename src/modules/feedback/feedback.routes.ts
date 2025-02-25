@@ -2,13 +2,14 @@ import express from "express";
 import validate from "../../middleware/validateData";
 import feedbackController from "./feedback.controller";
 import {CreateFeedbackSchema, DeleteFeedBackSchema, UpdateFeedbackSchema} from '../../schema/feedback.schema'
+import { checkRole } from "../../middleware/checkRole";
 
 const router = express.Router();
 
 
-router.get('/:id',feedbackController.getAll)
-router.post('/',validate(CreateFeedbackSchema),feedbackController.create)
-router.patch('/',validate(UpdateFeedbackSchema),feedbackController.updated)
-router.delete('/',validate(DeleteFeedBackSchema),feedbackController.delete)
+router.get('/:id',checkRole(['student']),feedbackController.getAll)
+router.post('/',checkRole(['student']),validate(CreateFeedbackSchema),feedbackController.create)
+router.patch('/',checkRole(['student']),validate(UpdateFeedbackSchema),feedbackController.updated)
+router.delete('/',checkRole(['student']),validate(DeleteFeedBackSchema),feedbackController.delete)
 
 export default router;
