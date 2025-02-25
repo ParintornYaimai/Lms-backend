@@ -4,7 +4,8 @@ import { generateAccessToken, generateRefreshToken } from "../../util/token";
 import jwt,{JwtPayload} from "jsonwebtoken"
 import bcrypt from 'bcrypt';
 import crypto from "crypto";
-
+import { sendOtpEmail } from '../../util/helper';
+import {OtpModel} from '../../model/otp.Model'
 
 class AuthService{
     
@@ -131,14 +132,44 @@ class AuthService{
         }
     }
 
-    
     async getCurrentSecret(){
         const secret = await secretModel.findOne();
-        if(!secret){
-            throw new Error('Secret not found. generate one first');
-        }
+        if(!secret) throw new Error('Secret not found. generate one first');
         
         return secret.currentSecret;
+    }
+
+    async sendOtp(email: string){
+        const otp = Math.floor(10000 + Math.random() * 90000).toString();
+        const result = await OtpModel.create({
+            email,
+            otp,
+            otpExpiresAt: new Date()
+        })
+        await sendOtpEmail(result.email, result.otp);
+        
+        return "OTP sent successfully" 
+    }
+
+    async verifyOtp(email: string, otpEntered: string){
+        const data = await OtpModel.findOne({email}).lean();
+        if(!data) throw new Error('Email not found');
+
+        const isOtpValid = data.otp === otpEntered 
+        if (!isOtpValid) throw new Error('OTP is invalid');
+        if(new Date() < new Date(data.otpExpiresAt)) throw new Error('OTP is expired');
+        
+        return "OTP verified successfully";
+    }
+
+    async resetPassword(email: string, RePassword: string){
+        const data = await OtpModel.findOne({email}).lean();
+        if(!data) throw new Error('Email not found');
+
+        const hashRepassword = bcrypt.hashSync(RePassword, 10);
+        await userModel.updateOne({ email }, { password: hashRepassword });
+        
+        return "Password reset successfully"
     }
 }
 

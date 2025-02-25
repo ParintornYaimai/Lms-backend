@@ -64,13 +64,53 @@ class authController{
                 res.status(401).send('Refresh Token required');
             }
 
-            const newAccessToken  = authService.refreshToken(refreshTokenInput)
+            const newAccessToken  = await authService.refreshToken(refreshTokenInput)
             res.status(200).json({ access_Token: newAccessToken })
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})
             log.error(error.message);
         }
     }
+
+    async sendOtp(req: Request, res:Response):Promise<void>{
+        const email = req.body.email;  
+        try {
+            const data = await authService.sendOtp(email);
+
+            res.status(200).json({success: true, data})
+        } catch (error:any) {
+            res.status(500).json({success: false,message:error.message,error:'Internal server error'})
+            log.error(error.message);
+        }
+    }
+
+    async verifyOtp(req: Request, res:Response):Promise<void>{
+        const otpEntered = req.body.otpEntered;
+        const email = req.query.email as string;
+        try {
+            const isValidOtp = await authService.verifyOtp(email, otpEntered);
+            
+            res.status(200).json({ success: true, isValidOtp});
+        } catch (error:any) {
+            res.status(500).json({success: false,message:error.message,error:'Internal server error'})
+            log.error(error.message);
+        }
+    }
+
+    async resetPassword(req: Request, res:Response):Promise<void>{
+        const RePassword  = req.body.RePassword;
+        const email = req.query.email as string
+            
+        try {
+            const data = await authService.resetPassword(email, RePassword);
+
+            res.status(200).json({ success: true, data});
+        } catch (error:any) {
+            res.status(500).json({success: false,message:error.message,error:'Internal server error'})
+            log.error(error.message);
+        }
+    }
+
 }
 
 export default new authController();

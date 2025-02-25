@@ -8,6 +8,7 @@ import axios from 'axios';
 import FormData from 'form-data';
 import { Readable } from 'stream';
 import FileType from 'file-type';
+import transporter from '../../config/nodemailer'
 
 export const checkDocxContent = async (fileBuffer: Buffer): Promise<boolean> => {
     try {
@@ -185,4 +186,23 @@ export const checkForVirus =async(fileBuffer: Buffer,fileName: string)=>{
         throw new Error(`Error scanning file for viruses: ${error.message}`);
     }
 }
+
+
+export const sendOtpEmail = async(userEmail:string, otp:string) => {
+    const mailOptions = {
+        from: process.env.EMAIL,
+        to: userEmail,
+        subject: 'Password Reset OTP',
+        text: `Your OTP for resetting your password is: ${otp}`
+    };
+    try {
+        await transporter.sendMail(mailOptions);
+
+        return 'OTP sent successfully';
+    } catch (error) {
+        console.log(error);
+        
+        return `Error sending OTP: ${error}`;
+    }
+};
 
