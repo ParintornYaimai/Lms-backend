@@ -10,6 +10,7 @@ class enrolledController {
         try{
             const data = await enrolledService.getCate();
 
+            req.app.get('socketIO').to(req.user.id).emit('enrolled:getCate',data );
             res.status(200).json({success: true, data})
         }catch(error: any){
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})
@@ -21,6 +22,7 @@ class enrolledController {
         try {
             const data = await enrolledService.getSubCate(req.params.id);
 
+            req.app.get('socketIO').to(req.user.id).emit('enrolled:getSubCate',data );
             res.status(200).json({success: true, data})
         } catch (error: any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})
@@ -32,6 +34,7 @@ class enrolledController {
         try {
             const data = await enrolledService.getCourseBySubCate();
             
+            req.app.get('socketIO').to(req.user.id).emit('enrolled:getAll',data );
             res.status(200).json({success: true, data});
         }catch(error: any){
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})
@@ -46,6 +49,7 @@ class enrolledController {
             const newObjId = new mongoose.Types.ObjectId(req.params.id)
             const data = await enrolledService.getCourseBySubCate(newObjId)
             
+            req.app.get('socketIO').to(req.user.id).emit('enrolled:getCourseBySubCate',data );
             res.status(200).json({success: true, data})
         } catch (error: any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})
@@ -57,17 +61,19 @@ class enrolledController {
         try {
             const data = await enrolledService.getById(req.params.id);
             
+            req.app.get('socketIO').to(req.user.id).emit('enrolled:getById',data );
             res.status(200).json({success: true, data});
         }catch(error: any){
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})
             log.error(error.message);
         }
     }
-
+        
     async enrolled(req: Request, res: Response): Promise<void>{
         try {
             const data = await enrolledService.enrolled(req.params.id, req.user.id);
             
+            req.app.get('socketIO').to(req.user.id).emit('enrolled:enrolled',data );
             res.status(200).json({success: true, data});
         }catch(error: any){
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})

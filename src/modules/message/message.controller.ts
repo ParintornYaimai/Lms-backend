@@ -12,6 +12,7 @@ class messageController {
         try {
             const message = await messageService.getAll(chatId, userId)
 
+            req.app.get('socketIO').to(chatId).emit('message:getAll',message );
             res.status(200).json(message)
         } catch (error: any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -24,7 +25,8 @@ class messageController {
         const sender = req.user.id;
         try {
             const message = await messageService.create({chatroom, sender,receiver, messageText, files})
-
+            
+            req.app.get('socketIO').to(chatroom).emit('message:create',message );
             res.status(200).json(message)
         } catch (error: any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -38,6 +40,7 @@ class messageController {
         try {
             const message = await messageService.edit({chatroom, messageId,sender, messageText, actions, status});
 
+            req.app.get('socketIO').to(chatroom).emit('message:edit',message );
             res.status(200).json(message)
        } catch (error: any) {
            res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -51,6 +54,7 @@ class messageController {
         try {
             const message = await messageService.delete({chatId, messageId, sender})
 
+            req.app.get('socketIO').to(chatId).emit('message:delete',message );
             res.status(200).json(message)
        } catch (error: any) {
            res.status(500).json({success: false,message:error.message,error:'Internal server error'});

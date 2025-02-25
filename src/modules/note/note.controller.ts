@@ -40,7 +40,7 @@ class noteController{
             const id = req.user.id;  
             const data = await noteService.getByIdForAccountId({id});
 
-            req.app.get('socketIO').emit('note:getNoteByIdForAccountOwner',data );
+            req.app.get('socketIO').to(req.user.id).emit('note:getNoteByIdForAccountOwner',data );
             res.status(200).json({success:true ,data});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -54,7 +54,7 @@ class noteController{
             const {tag} = req.body;
             const data = await noteService.getByTag({tag});
 
-            req.app.get('socketIO').emit('note:getByTag',data );
+            req.app.get('socketIO').to(req.user.id).emit('note:getByTag',data );
             res.status(200).json({success:true ,data});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -68,7 +68,7 @@ class noteController{
             const id = req.user.id;  
             const data = await noteService.create({title, tag, description, id});
 
-            req.app.get('socketIO').emit('note:create',data );
+            req.app.get('socketIO').to(req.user.id).emit('note:create',data );
             res.status(200).json({success:true ,message:"Creation successful"});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});

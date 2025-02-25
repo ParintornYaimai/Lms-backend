@@ -6,8 +6,9 @@ class chatController{
 
     async getAllFriends(req: Request, res: Response){
         try {
-            const myFriends = await chatService.getAllFriends(req.user.id);
+            const myFriends = await chatService.getAllFriends(req.user.id)
 
+            req.app.get('socketIO').to(req.user.id).emit('chat:getAllFriends',myFriends );
             res.status(200).json({success: true,myFriends})
         } catch (error: any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -19,6 +20,7 @@ class chatController{
         try {
             const chatData = await chatService.getAll(req.user.id)
             
+            req.app.get('socketIO').to(req.user.id).emit('chat:getAll',chatData );
             res.status(200).json({success: true,chatData})
         } catch (error: any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -31,6 +33,7 @@ class chatController{
         try {
             const chatData = await chatService.create(req.user.id,receiver)
             
+            req.app.get('socketIO').to(req.user.id).emit('chat:create',chatData );
             res.status(200).json({success: true,chatData})
         } catch (error: any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -43,6 +46,7 @@ class chatController{
         try {
             const chatData = await chatService.creategroup(peopleId)
             
+            req.app.get('socketIO').to(req.user.id).emit('chat:creategroup',chatData );
             res.status(200).json({success: true,chatData})
         } catch (error: any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -55,6 +59,7 @@ class chatController{
         try {
             const chatData = await chatService.addMember(groupChatId, peopleId)
             
+            req.app.get('socketIO').to(req.user.id).emit('chat:addMember',chatData );
             res.status(200).json({success: true,chatData})
         } catch (error: any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -65,10 +70,11 @@ class chatController{
       
     async delete(req: Request, res: Response){
         const chatId = req.params.id;
+        const userId = req.user.id
         try {
-            const chatData = await chatService.delete(chatId)
+            const chatData = await chatService.delete(chatId, userId)
             
-            
+            req.app.get('socketIO').to(req.user.id).emit('chat:delete',chatId );
             res.status(200).json({success: true,chatId})
         } catch (error: any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
