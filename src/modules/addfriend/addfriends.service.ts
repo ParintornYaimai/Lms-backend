@@ -44,7 +44,7 @@ class addFriendsService{
         return createReq; 
     }
 
-    async updated(userId: string, toUserId: string) {
+    async updated(userId: string, toUserId: string){
         const deleted = await AddFriendReqModel.findOneAndUpdate({
             fromuser: userId, 
             toUserId: toUserId,
@@ -55,7 +55,7 @@ class addFriendsService{
         return { success: true, message: "Friend request accepted successfully" };
     }
 
-    async delete(userId: string, toUserId: string) {
+    async delete(userId: string, toUserId: string){
         const deleted = await AddFriendReqModel.findOneAndDelete({
             fromuser: userId, 
             toUserId: toUserId

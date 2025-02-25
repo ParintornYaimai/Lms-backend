@@ -8,7 +8,8 @@ class addFriendsController{
     async getAll(req: Request, res: Response){
         try {
             const getAllData = await addFriendsService.getAll(req.user.id);
-
+            
+            req.app.get('socketIO').to(req.user.id).emit('addFriend:getAll',getAllData );
             res.status(200).json({success: true,getAllData})
         } catch (error: any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -18,9 +19,10 @@ class addFriendsController{
 
     async search(req: Request, res: Response){
         try {
-            const getAllData = await addFriendsService.search(req.body.email, req.user.id);
+            const searchData = await addFriendsService.search(req.body.email, req.user.id);
 
-            res.status(200).json({success: true,getAllData})
+            req.app.get('socketIO').to(req.user.id).emit('addFriend:search',searchData );
+            res.status(200).json({success: true,searchData})
         } catch (error: any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
             log.error(error.message);
@@ -32,6 +34,7 @@ class addFriendsController{
         try {
             const createData = await addFriendsService.create({fromuser, toUserId });
 
+            req.app.get('socketIO').to(req.user.id).emit('addFriend:create',createData );
             res.status(200).json({success: true,createData})
         } catch (error: any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -44,6 +47,7 @@ class addFriendsController{
         try {
             const updated = await addFriendsService.updated(req.user.id, toUserId)
 
+            req.app.get('socketIO').to(req.user.id).emit('addFriend:update',updated );
             res.status(200).json({success: true,updated})
         } catch (error: any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -56,6 +60,7 @@ class addFriendsController{
         try {
             const deleteData = await addFriendsService.delete(req.user.id, toUserId)
 
+            req.app.get('socketIO').to(req.user.id).emit('addFriend:delete',deleteData );
             res.status(200).json({success: true,deleteData})
         } catch (error: any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
