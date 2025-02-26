@@ -11,7 +11,7 @@ export interface TeacherModelType extends Document {
     password: string;
     resetToken?: string;
     courses: Types.ObjectId[];  
-    assignedAssignments: Types.ObjectId[]; 
+    assignmentmentsId: Types.ObjectId[]; 
     profilepicture: string
     refreshTokens?: { token: string; expiresAt: Date }[];
 }

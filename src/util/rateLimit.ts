@@ -2,7 +2,7 @@ import rateLimit from 'express-rate-limit'
 
 export const authRateLimiter = rateLimit({
     windowMs: 5 * 60 * 1000, 
-    max: 50,
+    max: 100,
     message: "Too many login attempts. Please try again later.",
 });
   

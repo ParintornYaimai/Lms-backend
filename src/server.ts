@@ -36,7 +36,7 @@ const server = http.createServer(app)
 const io = initializeSocket(server)
 
 // cors option
-const allowedOrigins = ['http://localhost:5500',',http://localhost:3000'];
+const allowedOrigins = ['http://localhost:5500','http://localhost:3000'];
 const corsOption: CorsOptions  = {
     origin: (origin,callback) =>{
         if(!origin || allowedOrigins.includes(origin)  ){
@@ -75,7 +75,7 @@ app.use('/api/message',publicRateLimiter,authenticateToken,message)
 app.use('/api/dashboard',publicRateLimiter,authenticateToken,dashboard)
 app.use('/api/resource',publicRateLimiter,authenticateToken,resource)
 
-const port = process.env.PORT || 8080
+const port = process.env.PORT 
 app.listen(port,async()=> {
     log.info(`server start on port: ${port}`)
     await connectToDb()

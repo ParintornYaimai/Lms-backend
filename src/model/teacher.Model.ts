@@ -10,7 +10,7 @@ const teacherSchema = new Schema<TeacherModelType>({
     department: { type: String },
     password: { type: String, required: true },
     courses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
-    assignedAssignments: [{ type: Schema.Types.ObjectId, ref: "Assignment" }],
+    assignmentmentsId: [{ type: Schema.Types.ObjectId, ref: "Assignment" }],
     profilepicture: { type: String, default: null },
     refreshTokens: [{ token: String, expiresAt: Date }]
 }, { timestamps: true });

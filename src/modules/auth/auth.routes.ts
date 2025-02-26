@@ -10,7 +10,7 @@ router.post('/sign-up',validate(registerSchema),authController.register);
 router.post('/sign-in',validate(loginSchema),authController.login)
 router.post('/sign-out',authenticateToken,authController.logout)
 
-router.post('/sign-in-teacher',validate(registerSchema),authController.registerForTeacher)
+router.post('/sign-up-teacher',validate(registerSchema),authController.registerForTeacher)
 
 router.post('/refresh-token',authenticateToken,authController.refreshtoken)
 
