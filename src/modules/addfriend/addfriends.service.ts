@@ -1,6 +1,6 @@
 import { createReq } from "../../types/addFriendsReq.type";
 import {AddFriendReqModel} from "../../model/friendrequest.Model"
-import { userModel } from "../../model/user.Model";
+import { studentModel } from "../../model/student.Model";
 import mongoose from "mongoose";
 
 
@@ -17,7 +17,7 @@ class addFriendsService{
     }
 
     async search(email: string, userId: string){
-        const searchEmail = await userModel.findOne({email}).select('_id firstname lastname profilepicture')
+        const searchEmail = await studentModel.findOne({email}).select('_id firstname lastname profilepicture')
         if(!searchEmail) throw new Error("Data not found")
         
         const newObjId = new mongoose.Types.ObjectId(userId);
