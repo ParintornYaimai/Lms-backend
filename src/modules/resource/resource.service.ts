@@ -13,7 +13,6 @@ class resourseService{
         const resources = await CourseModel.find({ _id: { $in: enrolledIds } });
         if (resources.length === 0) throw new Error('No courses found for the enrolled data');
         
-        
         const fileContents = resources.map((data) => {
             return data.coursecrm.map((courseCRM) => courseCRM.section.content).flat().filter((content) => content.type === 'file'); 
         }).flat(); 

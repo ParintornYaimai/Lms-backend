@@ -7,7 +7,6 @@ export interface TeacherModelType extends Document {
     role: string;
     phoneNumber: string;
     department: string;
-    username: string;
     password: string;
     resetToken?: string;
     courses: Types.ObjectId[];  

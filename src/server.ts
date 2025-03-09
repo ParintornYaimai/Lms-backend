@@ -11,7 +11,7 @@ import {authRateLimiter, publicRateLimiter} from './util/rateLimit'
 import { initializeSocket } from './socket/socket';
 
 //route
-import authRouter from './modules/auth/auth.routes'
+import authRouter from './modules/auth/auth.routes' 
 import noteRouter from './modules/note/note.routes'
 import commentRouter from './modules/comment/comment.routes'
 import assignmentRouter from './modules/assignments/assignment.routes'
@@ -36,7 +36,7 @@ const server = http.createServer(app)
 const io = initializeSocket(server)
 
 // cors option
-const allowedOrigins = ['http://localhost:5500','http://localhost:3000'];
+const allowedOrigins = ['http://localhost:3000','http://localhost:3001','https://educationwingplatform.com'];
 const corsOption: CorsOptions  = {
     origin: (origin,callback) =>{
         if(!origin || allowedOrigins.includes(origin)  ){
@@ -76,7 +76,7 @@ app.use('/api/dashboard',publicRateLimiter,authenticateToken,dashboard)
 app.use('/api/resource',publicRateLimiter,authenticateToken,resource)
 
 const port = process.env.PORT 
-app.listen(port,async()=> {
+server.listen(port,async()=> {
     log.info(`server start on port: ${port}`)
     await connectToDb()
     await initRedis()
