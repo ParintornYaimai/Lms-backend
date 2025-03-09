@@ -1,14 +1,15 @@
 import { Request, Response ,NextFunction} from 'express';
 import authService from './auth.service';
-import { Register,Login, Logout } from 'src/schema/auth.sechema';
-// import { upload } from 'config/cloudinary';
+import { Register,Login, Logout } from '../../schema/auth.sechema';
 import log from '../../util/logger';
 
 
 class authController{
 
-    async register(req: Request<{},{},Register>, res: Response):Promise<void>{
+    async register(req: Request, res: Response):Promise<void>{
         try {
+
+            
             const {firstname, lastname, email, password} = req.body;
             await authService.create({firstname, lastname, email, password});
 
@@ -31,8 +32,9 @@ class authController{
         }
     }
 
-    async login(req: Request<Login>, res: Response):Promise<void>{ 
+    async login(req: Request, res: Response):Promise<void>{ 
         try {
+
             const {email,password} = req.body;
             const {accessToken,refreshToken} = await authService.login({email,password});
             res.cookie('refresh_token', refreshToken, {
@@ -49,7 +51,7 @@ class authController{
         }
     }
     
-    async logout(req: Request<{}, {}, Logout>, res: Response):Promise<void>{
+    async logout(req: Request, res: Response):Promise<void>{
         
         try {
             const id = req.user.id;
