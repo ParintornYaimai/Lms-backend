@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken'
 import authService from '../modules/auth/auth.service'
-import { Request, Response,NextFunction } from 'express';
-import { secretModel } from '../model/user.Model';
+
 
 
 
