@@ -10,7 +10,7 @@ class enrolledController {
         try{
             const data = await enrolledService.getCate();
 
-            req.app.get('socketIO').to(req.user.id).emit('enrolled:getCate',data );
+            req.app.get('socketIO').emit('enrolled:getCate',data );
             res.status(200).json({success: true, data})
         }catch(error: any){
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})
@@ -22,7 +22,7 @@ class enrolledController {
         try {
             const data = await enrolledService.getSubCate(req.params.id);
 
-            req.app.get('socketIO').to(req.user.id).emit('enrolled:getSubCate',data );
+            req.app.get('socketIO').emit('enrolled:getSubCate',data );
             res.status(200).json({success: true, data})
         } catch (error: any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})
@@ -34,7 +34,7 @@ class enrolledController {
         try {
             const data = await enrolledService.getCourseBySubCate();
             
-            req.app.get('socketIO').to(req.user.id).emit('enrolled:getAll',data );
+            req.app.get('socketIO').emit('enrolled:getAll',data );
             res.status(200).json({success: true, data});
         }catch(error: any){
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})

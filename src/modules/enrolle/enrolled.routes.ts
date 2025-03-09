@@ -1,15 +1,15 @@
 import express from 'express';
 import enrolledController from './enrolled.controller';
 import { checkRole } from '../../middleware/checkRole';
-
+import cacheMiddleware from '../../middleware/cache'
 
 const router = express.Router();
 
-router.get('/',checkRole(['student']),enrolledController.getAll); //ดึงคอสทั้งหมดหน้า enrolle ที่ยังไม่ลงทะเบียน f
-router.get('/cate',checkRole(['student']),enrolledController.getCate); //ดึง category เพื่อใช้ filter f
-router.get('/subcate/:id',checkRole(['student']),enrolledController.getSubCate); // ดึง sub category เพื่อใช้ filter  f
-router.get('/getCourseBySubCate/:id',checkRole(['student']),enrolledController.getCourseBySubCate); //ดึงคอสทั้งหมดจาก subcateId (filter function)  f
-router.get('/:id',checkRole(['student']),enrolledController.getById) //ดึงรายละเอียดเเต่ละคอสเวลากดเข้าไปดู f
-router.post('/:id',checkRole(['student']),enrolledController.enrolled); //ลงทะเบียนเรียน f
+router.get('/',checkRole(['student']),cacheMiddleware('enrolle'),enrolledController.getAll); //ดึงคอสทั้งหมดหน้า enrolle ที่ยังไม่ลงทะเบียน 
+router.get('/cate',checkRole(['student']),cacheMiddleware('cate'),enrolledController.getCate); //ดึง category เพื่อใช้ filter 
+router.get('/subcate/:id',checkRole(['student']),cacheMiddleware('subcate'),enrolledController.getSubCate); // ดึง sub category เพื่อใช้ filter  
+router.get('/getCourseBySubCate/:id',checkRole(['student']),cacheMiddleware('enrolle'),enrolledController.getCourseBySubCate); //ดึงคอสทั้งหมดจาก subcateId (filter function)  
+router.get('/:id',checkRole(['student']),cacheMiddleware('enrolle'),enrolledController.getById) //ดึงรายละเอียดเเต่ละคอสเวลากดเข้าไปดู 
+router.post('/:id',checkRole(['student']),enrolledController.enrolled); //ลงทะเบียนเรียน 
 
 export default router;

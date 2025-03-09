@@ -1,14 +1,17 @@
 import { EnrolledModel } from "../../model/enrolled.Model";
 import { CategoryModel, SubCategoryModel } from "../../model/category.Model";
 import { CourseModel } from "../../model/course.Model";
-import { userModel } from "../../model/user.Model";
-import { EnrolledCourseData } from "../../types/enrolled.type";
+import { studentModel } from "../../model/student.Model";
 import mongoose, { PipelineStage } from "mongoose";
+import { client } from "../../../config/connectToRedis";
 
 class enrolledService {
     async getCate(){
         const cate = await CategoryModel.find().select('-createAt -updatedAt');
         if(cate.length === 0) throw new Error("Cate not found")
+        
+        const cacheKey = `cate:all`; 
+        if(client)await client.setEx(cacheKey, 604800, JSON.stringify(cate)); 
 
         return cate
     }
@@ -16,20 +19,27 @@ class enrolledService {
     async getSubCate(categoryId: string){
         const subCate = await SubCategoryModel.find({categoryId}).select('-createAt -updatedAt');
         if(subCate.length === 0) throw new Error("Cate not found")
+        
+        const cacheKey = `subcate:${categoryId}`; 
+        if(client)await client.setEx(cacheKey, 604800, JSON.stringify(subCate)); 
 
         return subCate
     }
 
     // ค้นหาจาก subcateId
-    async getCourseBySubCate(filter: object = {}): Promise<EnrolledCourseData[]> {
+    async getCourseBySubCate(filter: object = {}){
         
-        const matchCondition = Object.keys(filter).length > 0 ? { $match: { coursesubjectcate: filter } } : null;
+        const isFilterApplied = Object.keys(filter).length > 0;
+        const cacheKey = isFilterApplied ? `enrolle:${JSON.stringify(filter)}` : "enrolle:all";
     
+        // สร้าง match condition
+        const matchCondition = isFilterApplied ? { $match: { coursesubjectcate: filter } } : null;
+        
         const pipeline: PipelineStage[] = [
             ...(matchCondition ? [matchCondition] : []), 
             {
                 $lookup: {
-                    from: userModel.collection.name,
+                    from: studentModel.collection.name,
                     localField: "students",
                     foreignField: "_id",
                     as: "studentsInfo",
@@ -54,8 +64,9 @@ class enrolledService {
         ];
     
         const courseData = await CourseModel.aggregate(pipeline);
-    
         if(courseData.length === 0) throw new Error("Course not found");
+
+        if(client) await client.setEx(cacheKey, 3600, JSON.stringify(courseData));
     
         return courseData;
     }
@@ -73,8 +84,10 @@ class enrolledService {
             { path: 'coursesubjectcate', select: '-value -categoryId -updatedAt' },
             { path: 'createby' }
         ]).select('-assignment -students').lean();
-        
         if(!courseData) throw new Error('Course not found');
+
+        const keyNote = `enrolle:${courseData._id}`; 
+        if(client)await client.setEx(keyNote, 3600, JSON.stringify(courseData));
 
         return courseData
     }
@@ -84,15 +97,12 @@ class enrolledService {
         if(!courseId) throw new Error("Course ID is required");
         const newCourseId = new mongoose.Types.ObjectId(courseId);
     
-        // ตรวจสอบว่ามีคอร์สนี้ในฐานข้อมูลหรือไม่
         const checkCourse = await CourseModel.exists({ _id: newCourseId });
         if(!checkCourse) throw new Error('Course not found');
     
-        // ตรวจสอบการลงทะเบียนคอร์สแล้ว
         const check = await EnrolledModel.findOne({ course: newCourseId, student: studentId });
         if(check) throw new Error("Already enrolled in the course");
         
-        // ลงทะเบียนคอร์สใหม่
         const enrolled = await EnrolledModel.create({
             student: studentId,
             course: newCourseId,
