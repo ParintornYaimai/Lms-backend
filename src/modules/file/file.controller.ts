@@ -27,7 +27,7 @@ class uploadController{
         }
     }
     
-    async getById(req: Request<{id: string},{},{},{}>, res: Response){
+    async getById(req: Request, res: Response){
        try {
             const id = req.params.id;
             const data = await uploadService.getById(id);
