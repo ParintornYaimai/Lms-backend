@@ -6,12 +6,12 @@ import { CreateComment } from "src/schema/comment.schema";
 
 
 class commmentController{
-    async create(req: Request<CreateComment>, res: Response):Promise<void>{
+    async create(req: Request, res: Response):Promise<void>{
         try {
             const {content, note} = req.body;
-            const {id: author} = req.user.id;
+            const author = req.user.id;
             
-            if (!note || typeof note !== 'string') {
+            if(!note || typeof note !== 'string'){
                 res.status(400).json({ success: false, message: 'Invalid note ID' });
                 return;
             }
@@ -26,10 +26,10 @@ class commmentController{
         }
     }
 
-    async delete(req: Request<{id: string},{},{},{}>, res: Response):Promise<void>{
+    async delete(req: Request, res: Response):Promise<void>{
         try {
             const id = req.params.id;
-            const {id: accountOwnerId} = req.user.id;
+            const accountOwnerId = req.user.id;
             
             const data = await commentService.delete({id, accountOwnerId })
 

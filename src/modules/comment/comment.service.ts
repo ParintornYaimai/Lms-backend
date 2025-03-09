@@ -1,4 +1,4 @@
-import { userModel } from "../../model/user.Model";
+import { studentModel } from "../../model/student.Model";
 import { CommentModel } from "../../model/comment.Model";
 import {createCommentType, DeleteCommentType} from "../../types/comment.type";
 import { NoteModel } from "../../model/note.Model";
@@ -11,7 +11,7 @@ class commmentService{
         const updatedNote = await NoteModel.findByIdAndUpdate(noteId,{$push: {comments:newComment._id}},{new: true});
         if (!updatedNote) throw new Error('Note not found');
 
-        const updatedUser = await userModel.findByIdAndUpdate(author,{$push: {comments:newComment._id}},{new: true});
+        const updatedUser = await studentModel.findByIdAndUpdate(author,{$push: {comments:newComment._id}},{new: true});
         if(!updatedUser) throw new Error('User not found');
 
         return newComment
@@ -43,7 +43,7 @@ class commmentService{
                 $pull: { comments: id },
             }).session(session);   
 
-            await userModel.findByIdAndUpdate(accountOwnerId, {
+            await studentModel.findByIdAndUpdate(accountOwnerId, {
                 $pull: { comments: id },
             }).session(session); 
 
