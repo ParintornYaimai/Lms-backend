@@ -2,12 +2,12 @@ import mongoose from "mongoose";
 import { CourseModel } from "../../model/course.Model";
 import { FeedbackModel } from "../../model/feedback.Model";
 import {CreateFeedback, DeleteFeedBack, UpdateFeedBack} from "../../types/feedback.type"
+import { client } from "../../../config/connectToRedis";
 
 
 class feedBackService{
-    //find By courseId - get All Feedback In the Course
+
     async getAll(courseId: string) {
-        if (!courseId) throw new Error("Course ID is Required");
     
         const feedBackInCourse = await FeedbackModel.aggregate([
             { $match: { course: new mongoose.Types.ObjectId(courseId) } }, 
@@ -37,8 +37,11 @@ class feedBackService{
                 }
             }
         ]);
-    
-        if (!feedBackInCourse || feedBackInCourse.length === 0) throw new Error('Feedback not found');
+        if(!feedBackInCourse || feedBackInCourse.length === 0) throw new Error('Feedback not found');
+        
+        const keyNote = `feedback:${courseId}`; 
+        if(client)await client.setEx(keyNote, 3600, JSON.stringify(feedBackInCourse)); 
+
         return feedBackInCourse;
     }
 
@@ -55,6 +58,17 @@ class feedBackService{
             text
         })
 
+        const keyNote = `feedback:${courseData._id}`; 
+
+        if(client){
+            const cachedDataAll = await client.get(keyNote);
+            let allNotes = cachedDataAll ? JSON.parse(cachedDataAll) : [];
+    
+            allNotes.push(newFeedBack);
+    
+            await client.setEx(keyNote, 3600, JSON.stringify(allNotes));
+        }
+
         return newFeedBack;
     }
 
@@ -69,8 +83,10 @@ class feedBackService{
             { course: courseId, rating, text },
             { new: true }
         );
-    
         if(!update) throw new Error("Cannot update feedback");
+
+        const keyNote = `feedback:${courseId}`;
+        if(client) await client.del(keyNote);
     
         return update;
     }
@@ -84,8 +100,10 @@ class feedBackService{
         const deletedFeedback = await FeedbackModel.findOneAndDelete(
             { _id: feedbackId, student: userId,}
         );
-
         if(!deletedFeedback) throw new Error("Cannot delete feedback or feedback not found");
+
+        const keyNote = `feedback:${courseId}`;
+        if(client) await client.del(keyNote);
        
         return deletedFeedback;
     }
