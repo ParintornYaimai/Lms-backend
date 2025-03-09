@@ -1,5 +1,5 @@
 import { Response, Request, NextFunction } from "express";
-import { secretModel } from "../model/user.Model";
+import { secretModel } from "../model/student.Model";
 import jwt from 'jsonwebtoken'
 
 export const authenticateToken  =async(req: Request, res: Response, next:NextFunction)=>{
@@ -28,7 +28,7 @@ export const authenticateToken  =async(req: Request, res: Response, next:NextFun
         }
 
         const decode = jwt.verify(token,secret?.currentSecret as string)
-
+        
         if(decode){
             (req as any).user = decode; 
             // req.user = decode 
