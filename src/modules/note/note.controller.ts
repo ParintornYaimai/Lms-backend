@@ -1,12 +1,6 @@
 import { Request, Response } from "express";
 import log from "../../util/logger";
 import noteService from "./note.service";
-import { CreateNote, GetNoteByTag, UpdateNote, } from 'src/schema/note.sechema';
-
-
-
-// Request<Params, ResBody, ReqBody, Query>
-// Request<{},{},GetNoteByTag>
 
 class noteController{
 
@@ -22,7 +16,7 @@ class noteController{
         }
     }
 
-    async getById(req:Request<{id: string},{},{},{}>, res:Response):Promise<void>{
+    async getById(req:Request, res:Response):Promise<void>{
         try {
             const id = req.params.id
             const data = await noteService.getById(id)
@@ -38,7 +32,7 @@ class noteController{
     async getNoteByIdForAccountOwner(req: Request, res: Response):Promise<void>{
         try {
             const id = req.user.id;  
-            const data = await noteService.getByIdForAccountId({id});
+            const data = await noteService.getByIdForAccountId(id);
 
             req.app.get('socketIO').to(req.user.id).emit('note:getNoteByIdForAccountOwner',data );
             res.status(200).json({success:true ,data});
@@ -49,10 +43,10 @@ class noteController{
     }
 
     //filter
-    async getByTag(req: Request<GetNoteByTag>, res: Response):Promise<void>{
+    async getByTag(req: Request, res: Response):Promise<void>{
         try {
             const {tag} = req.body;
-            const data = await noteService.getByTag({tag});
+            const data = await noteService.getByTag(tag);
 
             req.app.get('socketIO').to(req.user.id).emit('note:getByTag',data );
             res.status(200).json({success:true ,data});
@@ -62,7 +56,7 @@ class noteController{
         }
     }
 
-    async create(req: Request<CreateNote>, res: Response):Promise<void>{
+    async create(req: Request, res: Response):Promise<void>{
         try {
             const {title, tag, description} = req.body;
             const id = req.user.id;  
@@ -76,11 +70,11 @@ class noteController{
         }
     }
 
-    async update(req: Request<UpdateNote>, res: Response):Promise<void>{
+    async update(req: Request, res: Response):Promise<void>{
         try {
             const {id, title, tag, description} = req.body;
-            const {id:accountOwnerId} = req.user.id;
-            const data = await noteService.update({id, title, tag, description ,accountOwnerId});;
+            const userId = req.user.id;
+            const data = await noteService.update({id, title, tag, description ,userId});;
 
             req.app.get('socketIO').emit('note:update',data );
             res.status(200).json({success:true ,message:"Creation successful"});
@@ -90,11 +84,11 @@ class noteController{
         }
     }
 
-    async delete(req: Request<{id: string},{},{},{}>, res: Response):Promise<void>{
+    async delete(req: Request, res: Response):Promise<void>{
         try {
             const id = req.params.id
-            const {id:accountOwnerId} = req.user.id;
-            const data = await noteService.delete({id,accountOwnerId});
+            const userId = req.user.id;
+            const data = await noteService.delete(id,userId);
 
             req.app.get('socketIO').emit('note:delete',data );
             res.status(200).json({success:true,message:'Delete successful'})

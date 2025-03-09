@@ -13,10 +13,6 @@ export interface getNoteByIdType{
     id:Types.ObjectId ,   
 }
 
-export interface getNoteByTagType{
-    tag:string ,   
-}
-
 export interface createNoteType{
     id:Types.ObjectId
     title: string,
@@ -29,10 +25,5 @@ export interface updateNoteType{
     title?: string,
     tag?:string,
     description?: string
-    accountOwnerId: string
-}
-
-export interface deteteNoteType{
-    id: string
-    accountOwnerId:string
+    userId: string
 }
