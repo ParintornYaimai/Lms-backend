@@ -3,8 +3,8 @@ import {MessageTypeModel} from "../types/message.type";
 
 const messageSchema = new Schema<MessageTypeModel>({
     chatroom: {type: Schema.Types.ObjectId, ref:"Chat", required: true},
-    sender:{ type: Schema.Types.ObjectId, ref: "User", required: true},
-    receiver:{ type: Schema.Types.ObjectId, ref: "User", required: true},
+    sender:{ type: Schema.Types.ObjectId, ref: "Student", required: true},
+    receiver:{ type: Schema.Types.ObjectId, ref: "Student", required: true},
     messageText:{ type: String , required: true},
     files:[{
         url: { type: String, required: true },

@@ -2,13 +2,13 @@ import mongoose, { Schema } from "mongoose";
 import { chatTypeModel, ChatGroupTypeModel } from "../types/chat.type";
 
 const chatSchema = new Schema<chatTypeModel>({
-    sender: { type: Schema.Types.ObjectId, required: true, ref: "User" },
-    receiver: {type: Schema.Types.ObjectId, required: true, ref: "User" },
+    sender: { type: Schema.Types.ObjectId, required: true, ref: "Student" },
+    receiver: {type: Schema.Types.ObjectId, required: true, ref: "Student" },
 }, { timestamps: true });
 
 const chatGroupSchema = new Schema<ChatGroupTypeModel>({
     people: [{
-        user: { type: Schema.Types.ObjectId, required: true, ref: "User" },
+        user: { type: Schema.Types.ObjectId, required: true, ref: "Student" },
     }]
 }, { timestamps: true })
 

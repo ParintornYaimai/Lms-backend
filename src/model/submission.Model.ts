@@ -3,7 +3,7 @@ import { SubmissionTypeModel } from "../types/submission.type";  // คุณอ
 
 const submissionSchema = new Schema<SubmissionTypeModel>({
     assignmentId: { type: Schema.Types.ObjectId, ref: "Assignment", required: true},
-    studentId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    studentId: { type: Schema.Types.ObjectId, ref: "Student", required: true },
     score: { type: Number, default: 0 },
     files: [{
         url: { type: String, required: true },

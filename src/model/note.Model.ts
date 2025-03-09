@@ -6,7 +6,7 @@ const noteSchemaModel = new Schema<noteTypeModel>({
     title: { type: String, required: true },
     tag: { type: String, required: true },
     description: { type: String, required: true },
-    author: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    author: { type: Schema.Types.ObjectId, ref: "Student", required: true },
     comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
 }, { timestamps: true })
 

@@ -2,7 +2,7 @@ import mongoose, { Schema } from "mongoose";
 import { EnrolledTypeModel } from "../types/enrolled.type";
 
 const EnrolledSchema = new Schema<EnrolledTypeModel>({
-    student: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    student: { type: Schema.Types.ObjectId, ref: 'Student', required: true },
     course: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
     status: {
         type: String,
