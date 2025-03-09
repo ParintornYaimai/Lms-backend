@@ -5,7 +5,8 @@ import { CategoryModel, SubCategoryModel } from "../../model/category.Model";
 import { EnrolledModel } from "../../model/enrolled.Model";
 import mongoose from "mongoose";
 import { TeacherModel } from "../../model/teacher.Model";
-import { userModel } from "../../model/user.Model";
+import { client } from "../../../config/connectToRedis";
+
 
 class CourseService{
     
@@ -37,9 +38,13 @@ class CourseService{
                     },
                     enrolledIds: { $first: "$_id"  }
                 }
-            }]); 
+            }
+        ]); 
         if(enrolledData.length === 0) throw new Error("Data not found")
-        
+
+        const keycache = `course:all`
+        if(client) await client.setEx(keycache, 3600, JSON.stringify(enrolledData)); 
+
         return enrolledData
     }
     
@@ -82,9 +87,8 @@ class CourseService{
         return courseData;
     }
 
-    //เปลี่ยน Model เป้น Teacher 
     async create(courseData: CreateCourse,teacherId: string){
-        const existingTeacher = await userModel.exists({_id: teacherId, role: "teacher"})
+        const existingTeacher = await TeacherModel.exists({_id: teacherId, role: "teacher"})
         if(!existingTeacher) throw new Error('Instructor does not exist.')
 
         const existingCourse = await CourseModel.countDocuments({
