@@ -6,12 +6,11 @@ class userController {
 
   async getUser(req: Request, res: Response): Promise<void> {
     try {
-      // const userId = (req as any).user.id;
       const userId = req.user.id;
       
       const data = await userService.getUser(userId);
 
-      req.app.get('socketIO').emit('user:get',data );
+      req.app.get('socketIO').to(userId).emit('user:get',data );
       res.status(200).json({ success: true, data });
     } catch (error: any) {
       res.status(500).json({success: false,message:error.message,error:'Internal server error'});
