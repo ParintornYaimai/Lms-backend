@@ -1,7 +1,6 @@
-import { createNoteType, updateNoteType, getNoteByIdType } from "src/types/note.type";
+import { createNoteType, updateNoteType } from "src/types/note.type";
 import {NoteModel} from "../../model/note.Model"
 import { studentModel } from "../../model/student.Model";
-import { Types } from "mongoose";
 import { client } from "../../../config/connectToRedis";
 
 class noteService{
@@ -9,11 +8,11 @@ class noteService{
     async getAll(){
         const note = await NoteModel.find()
         .populate('author','firstname lastname profilepicture')
-        .select('-comments'); ;
+        .select('-comments').sort({ createdAt: -1 });
         if(note.length === 0) throw new Error('No data found');
 
-        const keyAllNotes = 'note:all'; 
-        if(client) await client.setEx(keyAllNotes, 3600, JSON.stringify(note)); 
+        // const keyAllNotes = 'note:all'; 
+        // if(client) await client.setEx(keyAllNotes, 3600, JSON.stringify(note)); 
 
         return note;
     }
@@ -30,32 +29,66 @@ class noteService{
         });
         if(!note) throw new Error('Note not found')
 
-        const keyNote = `note:${note._id}`; 
-        if(client)await client.setEx(keyNote, 3600, JSON.stringify(note)); 
-
         return note;
     }
 
-    // For account owner
     // My note 
-    async getByIdForAccountId(id: getNoteByIdType){
+    async getByIdForAccountId(id: string){
+        
         const note = await NoteModel.find({author: {$in: id}})
-        .populate('comments')
+        .select('-comments')
         .populate('author','firstname lastname profilepicture');
         if(note.length === 0) throw new Error(`Data not found ${id}`);
 
         return note;
     }
 
-    async getByTag(tag: string){
-        //ป้องกัน
+    async getByTag(tag: string, sortBy: string, userId?: string) {
         const safeTag = tag.replace(/[\$|\.]/g, "");
-        const note = await NoteModel.find({tag:safeTag})
-        .populate('author','firstname lastname profilepicture');
-        if(note.length === 0) throw new Error(`Data not found ${tag}`);
+        let filter: any = {};
+
+        const now = new Date();
+
+        if(sortBy === 'This week') {
+            const day = now.getDay();
+            const diffToMonday = (day === 0 ? -6 : 1 - day);
+            const monday = new Date(now);
+            monday.setDate(now.getDate() + diffToMonday);
+            monday.setHours(0, 0, 0, 0);
+
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            sunday.setHours(23, 59, 59, 999);
+
+            filter.createdAt = { $gte: monday, $lte: sunday };
+        }
+
+        if(sortBy === 'This month') {
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+            filter.createdAt = { $gte: firstDay, $lte: lastDay };
+        }
+
+        if(sortBy === 'This year') {
+            const firstDay = new Date(now.getFullYear(), 0, 1);
+            const lastDay = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+
+            filter.createdAt = { $gte: firstDay, $lte: lastDay }; 
+        }
+        
+        if(userId){
+            filter.author = userId
+        }
+
+        const query = safeTag ? { tag: safeTag, ...filter } : { ...filter };
+        const note = await NoteModel.find(query)
+            .select('-comments')
+            .populate('author', 'firstname lastname profilepicture')
+            .sort({createdAt:-1});
 
         return note;
-    }   
+    }
 
     async create({title, tag, description, id}: createNoteType){
         const newNote = await  NoteModel.create({title, tag, description,author:id});
@@ -72,7 +105,6 @@ class noteService{
     
             allNotes.push(newNote);
     
-            await client.setEx(keyNote, 3600, JSON.stringify(newNote));
             await client.setEx(keyAllNotes, 3600, JSON.stringify(allNotes));
         }
 
@@ -80,14 +112,19 @@ class noteService{
     }
 
     async update({id,title, tag, description,userId}: updateNoteType){
-        const userNote = await studentModel.findById(userId).select('notes') 
-        if(!userNote || !userNote.notes) throw new Error('User not found')
+        const checkOwnerNote = await NoteModel.findById(id)
+        if (!checkOwnerNote) throw new Error("Note not found");
+    
+        if (checkOwnerNote.author.toString() !== userId) throw new Error("Permission denied: Can't update");
+        
+        // const userNote = await studentModel.findById(userId).select('notes') 
+        // if(!userNote || !userNote.notes) throw new Error('User not found')
 
-        const notes: Types.ObjectId[] = userNote.notes as Types.ObjectId[];
+        // const notes: Types.ObjectId[] = userNote.notes as Types.ObjectId[];
 
-        if (!notes.map(note => note.toString()).includes(id)) {
-            throw new Error('Unable to update');
-        }
+        // if(!notes.map(note => note.toString()).includes(id)) {
+        //     throw new Error('Unable to update');
+        // }
 
         const updateNote = await NoteModel.findByIdAndUpdate(id,{title, tag, description},{
             new: true
@@ -113,10 +150,6 @@ class noteService{
         if(!userNote) throw new Error("Cannot be deleted");
     
         const deleteNote = await NoteModel.findByIdAndDelete(id);
-
-        await studentModel.findByIdAndUpdate(accountOwnerId, {
-            $pull: { notes: id },
-        });
 
         const keyNote = `note:${id}`;
         const keyAllNotes = `note:all`;

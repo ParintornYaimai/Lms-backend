@@ -1,17 +1,24 @@
-import { z } from "zod";
+import { number, z } from "zod";
 
 const ContentSchema = z.object({
-    title: z.string(), // ชื่อหัวข้อของ content
-    type: z.enum(["text", "file", "video"]), 
-    content: z.string().optional(), // ฟิลด์นี้เป็น optional
-    url: z.string().url("Invalid URL.").optional(), // ฟิลด์ URL เป็น optional
+    id:z.number(),
+    name: z.string(),
+    contentType: z.enum(["file", "video"]), // ชื่อหัวข้อของ content
+    contentValue: z.array(
+        z.array(
+            z.object({
+            fileId: z.string(),
+            fileUrl: z.string(),
+            filename: z.string(),
+            })
+        )
+    ).optional() 
 });
 
 const CourseCRMSchema = z.object({
-    section: z.object({
-        sectionname: z.string(),
-        content: z.array(ContentSchema),
-    }),
+    id: z.number(),
+    name: z.string(),
+    lectures: z.array(ContentSchema),
 });
 
 export const CreateCourseSchema = z.object({
@@ -20,14 +27,22 @@ export const CreateCourseSchema = z.object({
     coursecate: z.string().min(1, "Course category is required."),
     coursesubjectcate: z.string().min(1, "Course subject category is required."),
     coursetopic: z.string().min(1, "Course topic is required."),
-    duration: z.number().min(1, "Duration must be at least 1 hour."), 
-    thumbnailurl: z.string().url("Invalid URL for thumbnail."),
+    courselanguage: z.string().min(1, "courselanguage is required."),
+    subtitlelanguage: z.string().min(1, "subtitlelanguage is required."),
+    courselevel:z.string().min(1, "courselevel is required."),
+    duration: z.number().min(1, "Duration must be at least 1 hour."),
+    thumbnailurl: z.array(z.object({
+        fileId: z.string(),
+        filename: z.string(),
+        fileUrl: z.string(),
+    })).min(1, "required"),
     coursematerial: z.string().min(1, "Course material is required."),
-    mainpoint: z.array(z.string()).min(1, "At least one main point is required."), 
+    whatyouwillteachincourse: z.array(z.string()).min(1, "At least one main point is required."), 
     coursereq: z.array(z.string()).min(1, "At least one course requirement is required."), 
-    coursecrm: z.array(CourseCRMSchema), 
-    welmsg: z.string().optional(),
-    conmsg: z.string().optional(), 
+    whothiscourseisfor: z.array(z.string()).min(1, "At least one course requirement is required."), 
+    coursecrm: z.array(CourseCRMSchema).optional(), 
+    welmsg: z.string().optional().optional(),
+    conmsg: z.string().optional().optional(),
 });
 
 export const UpdateCourseSchema = z.object({

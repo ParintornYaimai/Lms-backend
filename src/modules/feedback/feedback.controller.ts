@@ -21,7 +21,7 @@ class feedBackController {
         try{
             const data = await feedBackService.create(req.user.id, req.body);
 
-            req.app.get('socketIO').to(req.user.id).emit('feedBack:create',data );
+            req.app.get('socketIO').emit('feedBack:create',data );
             res.status(200).json({success: true, data});
         }catch(error: any){
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})

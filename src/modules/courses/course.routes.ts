@@ -7,8 +7,8 @@ import {CreateCourseSchema, UpdateCourseSchema} from '../../schema/course.schema
 const router = express.Router();
 
 //student
-router.get('/',checkRole(['student']),courseController.getAllForUser) //ดึงหน้าคอสทั้งหมดที่ลงทะเบียนเเล้ว
-router.patch('/:id',checkRole(['student']),courseController.startCourse)  // กด Launch Course
+router.get('/',courseController.getAllForUser) //ดึงหน้าคอสทั้งหมดที่ลงทะเบียนเเล้ว
+router.patch('/:id',courseController.startCourse)  // กด Launch Course
 router.get('/getInProgressCourses/:courseId/:enrolledId',checkRole(['student']),courseController.getInProgressCourses) // กด continue
 
 //teacher 

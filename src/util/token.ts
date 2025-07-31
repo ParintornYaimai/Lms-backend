@@ -8,7 +8,7 @@ import authService from '../modules/auth/auth.service'
 // create Access_token
 export const generateAccessToken =async(user:any)=>{
     const secret = await authService.getCurrentSecret();
-    return jwt.sign({ id: user.id, firstname: user.firstname, lastname: user.lastname , email: user.email ,role: user.role  }, secret, { expiresIn: '5m' });
+    return jwt.sign({ id: user.id, firstname: user.firstname, lastname: user.lastname , email: user.email ,role: user.role  }, secret, { expiresIn: '30m' });
 }
 
 // create Refresh_token

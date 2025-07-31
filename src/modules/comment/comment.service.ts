@@ -6,26 +6,22 @@ import mongoose from "mongoose";
 
 class commmentService{
     async create({content, noteId, author}: createCommentType):Promise<createCommentType>{
-        const newComment = await CommentModel.create({content, noteId, author});
+        const newCommentDoc = await CommentModel.create({ content, noteId, author });
+        await Promise.all([
+            NoteModel.findByIdAndUpdate(noteId, { $push: { comments: newCommentDoc._id } }),
+            studentModel.findByIdAndUpdate(author, { $push: { comments: newCommentDoc._id } })
+        ]);
 
-        const updatedNote = await NoteModel.findByIdAndUpdate(noteId,{$push: {comments:newComment._id}},{new: true});
-        if (!updatedNote) throw new Error('Note not found');
-
-        const updatedUser = await studentModel.findByIdAndUpdate(author,{$push: {comments:newComment._id}},{new: true});
-        if(!updatedUser) throw new Error('User not found');
-
-        return newComment
+        const newComment = await newCommentDoc.populate('author');
+        return newComment;
     }
 
 
     async delete({id, accountOwnerId}: DeleteCommentType){
-        if(!id){
-            throw new Error('Id is required')
-        }
 
         const session = await mongoose.startSession();
 
-        try {
+        try{
             session.startTransaction();
 
             const deleteComment = await CommentModel.findOne({
@@ -33,9 +29,7 @@ class commmentService{
                 author: accountOwnerId,
             }).session(session); 
 
-            if (!deleteComment) {
-                throw new Error("Cannot be deleted");
-            }
+            if(!deleteComment) throw new Error("Cannot be deleted");
 
             await CommentModel.findByIdAndDelete(id).session(session);
 
@@ -43,15 +37,11 @@ class commmentService{
                 $pull: { comments: id },
             }).session(session);   
 
-            await studentModel.findByIdAndUpdate(accountOwnerId, {
-                $pull: { comments: id },
-            }).session(session); 
-
             await session.commitTransaction();
             session.endSession();
 
             return deleteComment;
-        } catch (error) {
+        }catch(error){
             await session.abortTransaction();
             session.endSession();
             throw error;

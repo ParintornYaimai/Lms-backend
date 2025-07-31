@@ -7,8 +7,8 @@ import cacheMiddleware from "../../middleware/cache";
 
 const router = express.Router();
 
-
-router.get('/:id',checkRole(['student']),cacheMiddleware('feedback'),feedbackController.getAll)
+// ,cacheMiddleware('feedback')
+router.get('/:id',checkRole(['student']),feedbackController.getAll)
 router.post('/',checkRole(['student']),validate(CreateFeedbackSchema),feedbackController.create)
 router.patch('/',checkRole(['student']),validate(UpdateFeedbackSchema),feedbackController.updated)
 router.delete('/',checkRole(['student']),validate(DeleteFeedBackSchema),feedbackController.delete)

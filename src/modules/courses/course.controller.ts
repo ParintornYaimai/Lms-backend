@@ -9,7 +9,6 @@ class CourseController{
     async getAllForUser(req: Request, res: Response): Promise<void>{
         try {      
             const data = await CourseService.getAllForUser(req.user.id)
-            
             req.app.get('socketIO').to(req.user.id).emit('course:getAllForUser',data );
             res.status(200).json({success: true, data})
         }catch(error: any){
@@ -31,7 +30,7 @@ class CourseController{
     }
     
     async getInProgressCourses(req: Request, res: Response): Promise<void>{
-        try {
+        try { 
             const data = await CourseService.getInProgressCourses(req.user.id, req.params.courseId, req.params.enrolledId);
 
             req.app.get('socketIO').to(req.user.id).emit('course:getInProgressCourses',data );
@@ -57,9 +56,9 @@ class CourseController{
 
     async create(req: Request, res: Response): Promise<void>{
         try {
-            const data = await CourseService.create(req.body,req.user.id);
             
-            req.app.get('socketIO').to(req.user.id).emit('course:create',data );
+            const data = await CourseService.create(req.body,req.user.id);
+            // req.app.get('socketIO').to(req.user.id).emit('course:create',data );
             res.status(200).json({success: true, data});
         }catch(error: any){
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})

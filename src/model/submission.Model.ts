@@ -6,9 +6,9 @@ const submissionSchema = new Schema<SubmissionTypeModel>({
     studentId: { type: Schema.Types.ObjectId, ref: "Student", required: true },
     score: { type: Number, default: 0 },
     files: [{
-        url: { type: String, required: true },
-        type: { type: String, enum: ["pdf", "doc", "docx", "ppt", "pptx", "jpg", "jpeg", "png"], required: true },
-        size: { type: Number }  // ขนาดไฟล์ KB/MB
+      fileId: { type: String, required: true },
+      filename: { type: String, required: true },
+      fileUrl: { type: String, required: true }, 
     }],
     status: { type: String, enum: ['Pending', 'Submitted', 'Overdue'], default: 'Pending' }, //Submitted = ส่งงานเเล้ว  Overdue = เกินกำหนด  Pending = รอดำเนินการ 
 }, { timestamps: true });

@@ -13,14 +13,13 @@ class AuthService{
     private async verifyWithDynamicSecret(token:string):Promise<JwtPayload>{
         const secret = await secretModel.findOne();
         if(!secret) throw new Error('Secret not found');
-    
         try {
             return jwt.verify(token,secret.currentSecret) as JwtPayload;
         }catch(error){
             for(const old of secret.oldSecrets){
                 try {
                   return jwt.verify(token, old.secret) as JwtPayload;
-                } catch (e) {}
+                } catch (e) { }
             }
             throw new Error('Invalid token');
         }
@@ -28,7 +27,7 @@ class AuthService{
     
     
     async create(data:userTypeModel ){
-        const {firstname, lastname, email, password, role} = data
+        const {firstname, lastname, email, password} = data
         const existUser = await studentModel.findOne({email});
         
         if(existUser) throw new Error('User already exist')
@@ -38,12 +37,11 @@ class AuthService{
         const salt = await bcrypt.genSalt(10)
         const encrypt = await bcrypt.hash(password,salt)
             
-        const newUser =await studentModel.create({
+        const newUser = await studentModel.create({
             firstname,
             lastname,
             email,
-            password: encrypt,
-            role,
+            password: encrypt
         });
 
         return newUser
@@ -75,7 +73,6 @@ class AuthService{
     
         let user = await studentModel.findOne({ email });
         if(!user) user = await TeacherModel.findOne({ email });
-        
         if(!user) throw new Error("User not found");
         
         const isMatch = bcrypt.compareSync(password, user.password);
@@ -87,13 +84,15 @@ class AuthService{
     }
 
     async loggout (data:logoutTypeModel) {
-        const {id,refresh_token} = data       
+        const {id, refresh_token} = data       
 
-        const user = await studentModel.findById(id);
-        if(!user) throw new Error('User not found')
+        let user = await studentModel.findById(id);
+        if(!user) user = await TeacherModel.findById(id);
 
-        user.refreshTokens = user.refreshTokens?.filter((t) => t.token !== refresh_token) ?? [];
-        await user.save();
+        if(user){
+            user.refreshTokens = user?.refreshTokens?.filter((t) => t.token !== refresh_token) ?? [];
+            await user.save();
+        }
 
         return user;
     }
@@ -127,9 +126,12 @@ class AuthService{
         }
     }
 
-    async refreshToken(refreshTokenInput: string){
+    async refreshToken(refreshTokenInput: string){ //เเก้ให้ใช้กับอาจารได้ด้วย
         const userData = await this.verifyWithDynamicSecret(refreshTokenInput);
-        const user = await studentModel.findById(userData.id);
+        let user = await studentModel.findById(userData.id);
+        if(!user){
+            user = await TeacherModel.findById(userData.id)
+        }
 
         if(!user || !user?.refreshTokens || !user.refreshTokens.some((t) => t.token === refreshTokenInput)) {
             throw new Error('Invalid refresh token')

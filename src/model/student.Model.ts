@@ -15,10 +15,12 @@ const userSchemaModel = new Schema<userTypeModel>({
     email: { type: String, required: true ,unique: true },
     password: { type: String, required: true },
     role: { type: String, default: 'student' },
-    notes: [{ type: Schema.Types.ObjectId, ref: 'Note' }],
-    comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
     assignments: [{ type: Schema.Types.ObjectId, ref: "Assignment" }],
-    profilepicture: { type: String, default: null },
+    profilepicture: {
+        fileId: { type: String, default:''},
+        filename: { type: String, default:'' },
+        fileUrl: { type: String, default:''}
+    },
     refreshTokens: [{ token: String, expiresAt: Date }]
 }, { timestamps: true })
 

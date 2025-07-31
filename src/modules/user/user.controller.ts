@@ -18,13 +18,14 @@ class userController {
     }
   }
 
-  async updateUser(req: Request, res: Response): Promise<void> {
+  async updateUser(req: Request, res: Response): Promise<void>{
     try {
-      const {firstname, lastname, welcomeMessage, language, dateFormat, timeFormat, country, timeZone, currentTime} = req.body;
+      const {firstName, lastName, message, language, dateFormat, timeFormat, country, timeZone, profilePicture} = req.body;
       const userId = req.user.id;
 
-      const data = await userService.updateUser({userId, firstname, lastname, welcomeMessage, language, dateFormat, timeFormat, country, timeZone, currentTime});
+      const data = await userService.updateUser({userId, firstName, lastName, message, language, dateFormat, timeFormat, country, timeZone, profilePicture});
 
+      // console.log(data)
       req.app.get('socketIO').emit('user:update',data );
       res.status(200).json({success: true, message: "User updated successfully"});
     } catch (error: any) {

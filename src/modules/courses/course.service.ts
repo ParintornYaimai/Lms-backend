@@ -5,16 +5,19 @@ import { CategoryModel, SubCategoryModel } from "../../model/category.Model";
 import { EnrolledModel } from "../../model/enrolled.Model";
 import mongoose from "mongoose";
 import { TeacherModel } from "../../model/teacher.Model";
-import { client } from "../../../config/connectToRedis";
+import { AssignmentModel } from "../../model/assignment.Model";
 
 
 class CourseService{
     
     async getAllForUser(studentId: string){
         if(!studentId) throw new Error('User Id is required')
-
         const enrolledData = await EnrolledModel.aggregate([
-            { $match: { student: new mongoose.Types.ObjectId(studentId) } },
+            { $match: { 
+                student: new mongoose.Types.ObjectId(studentId),
+                status: { $in: ["not started", "in-progress", "completed"] }
+                } 
+            },
             {
                 $lookup: {
                     from: CourseModel.collection.name,
@@ -30,77 +33,95 @@ class CourseService{
                     total: { $sum: 1 },
                     courses: {
                         $push: {
+                            enrolledId: "$_id",
                             courseId: "$course", 
                             title: "$courseDetails.title",
                             subtitle: "$courseDetails.subtitle",
                             thumbnailurl: "$courseDetails.thumbnailurl", 
                         }
                     },
-                    enrolledIds: { $first: "$_id"  }
                 }
             }
         ]); 
         if(enrolledData.length === 0) throw new Error("Data not found")
-
-        const keycache = `course:all`
-        if(client) await client.setEx(keycache, 3600, JSON.stringify(enrolledData)); 
-
+        
+        // const keycache = `course:all`
+        // if(client) await client.setEx(keycache, 3600, JSON.stringify(enrolledData)); 
         return enrolledData
     }
     
-    async startCourse(courseId: string, studentId: string){
-        if(!courseId) throw new Error("Course ID is required");
+    async startCourse(courseId: string, studentId: string) {
         const newCourseId = new mongoose.Types.ObjectId(courseId);
-
-        const enrolledExisting = await EnrolledModel.exists({ student: studentId, course: newCourseId });
-        if (!enrolledExisting) throw new Error("You are not enrolled for this course.");
-
+        
         const updateEnrolleStatus = await EnrolledModel
-        .findOneAndUpdate({student: studentId, course: newCourseId},{ $set:{status: 'in-progress'}},{new: true})
-        if(!updateEnrolleStatus) throw new Error("Unable to start the course")
-
+            .findOneAndUpdate(
+                { student: studentId, course: newCourseId }, 
+                { $set: { status: 'in-progress' } }, 
+                { new: true }
+            );
+        
+        if(!updateEnrolleStatus) throw new Error("You are not enrolled for this course");
+        
         return updateEnrolleStatus;
-    }
+    }       
 
-    async getInProgressCourses(studentId: string, courseId: string, enrolledId: string){
-        if (!courseId || !studentId || !enrolledId)throw new Error("Course ID and Student ID and Enrolled Id are required");
+    async getInProgressCourses(studentId: string, courseId: string, enrolledId: string) {
+        if(!courseId || !studentId || !enrolledId) throw new Error("Course ID and Student ID and Enrolled Id are required");
 
         const enrolleData = await EnrolledModel.findOne({
             _id: enrolledId,
             student: studentId,
             course: courseId,
             status: "in-progress"
-        });
+        })
+        .populate({
+            path: 'course',
+            select: '_id title subtitle coursecrm coursecate coursesubjectcate coursetopic createby',
+            populate: {
+                path: 'createby',
+                select: 'firstname lastname'
+            }
+        }).lean();
+
         if(!enrolleData) throw new Error("Enrolled record not found or not in-progress");
+        if(!enrolleData.course) throw new Error("Course not found");
 
-        const courseData = await CourseModel.findById(courseId).lean();
-        if (!courseData) throw new Error("Course not found");
+        return enrolleData.course;
+    }
+
+    async getAll(teacherId: string) {
+        const courseData = await CourseModel.find({ createby: teacherId })
+            .select('-createby -assignment -students')
+            .populate({
+            path: 'coursesubjectcate',
+            select: 'name'
+            })
+            .sort({ createdAt: -1 })
+            .lean();
+
+        if (courseData.length === 0) throw new Error('No courses found for this teacher');
 
         return courseData;
     }
 
-    async getAll(teacherId: string){
-        const courseData = await CourseModel.find({createby: teacherId})
-        .select('-createby -assignment -students').sort({ createdAt: -1 }).lean(); 
-        if(courseData.length === 0) throw new Error('No courses found for this teacher');
-
-        return courseData;
-    }
-
-    async create(courseData: CreateCourse,teacherId: string){
-        const existingTeacher = await TeacherModel.exists({_id: teacherId, role: "teacher"})
-        if(!existingTeacher) throw new Error('Instructor does not exist.')
-
-        const existingCourse = await CourseModel.countDocuments({
-            title: courseData.title,
-            coursetopic: courseData.coursetopic,
-            createby: teacherId,
-        });
+    async create(courseData: CreateCourse,teacherId: string) {
+        const [existingTeacher, courses] = await Promise.all([
+            TeacherModel.exists({_id: teacherId, role: "teacher"}),
+            CourseModel.find({
+                title: courseData.title,
+                coursetopic: courseData.coursetopic,
+                createby: teacherId,
+            }).limit(2).select('_id').lean() 
+        ]);
         
-        if (existingCourse >= 2) throw new Error('You cannot create more than 2 courses with the same title and topic');
-
-        const newCourse = new CourseModel({...courseData,createby:teacherId});
-        return await newCourse.save();
+        if(!existingTeacher) throw new Error('Instructor does not exist.');
+        if(courses.length >= 2) throw new Error('Cannot create more than 2 courses');
+        
+        return await CourseModel.collection.insertOne({
+            ...courseData,
+            createby: new mongoose.Types.ObjectId(teacherId),
+            createdAt: new Date()
+        });
     }
 
     
@@ -115,15 +136,38 @@ class CourseService{
     }
 
     async delete(courseId: string, teacherId: string) {
-        if(!courseId || !teacherId) throw new Error("CourseId and teacherId is required")
-        const deleteCourse = await CourseModel.findOneAndDelete({
-            _id: courseId,
-            createby: teacherId,
-        });
+        if (!courseId || !teacherId) throw new Error("CourseId and teacherId is required");
+
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        
+        try {
+            const deleteCourse = await CourseModel.findOne({
+                _id: courseId,
+                createby: teacherId,
+            }).session(session);
     
-        if(!deleteCourse) throw new Error('Course not found or you are not the creator of this course');
+            if (!deleteCourse) throw new Error('Course not found or you are not the creator of this course');
+
+            await EnrolledModel.deleteMany({ courseId }).session(session);
+
+            await AssignmentModel.deleteMany({ courseId }).session(session);
+
+            await deleteCourse.deleteOne().session(session);
+
+            await session.commitTransaction();
+
+            session.endSession();
     
-        return deleteCourse;
+            return deleteCourse;
+        } catch (error) {
+
+            await session.abortTransaction();
+
+            session.endSession();
+    
+            throw error;
+        }
     }
 
     async getCate(){

@@ -10,7 +10,7 @@ const router = express.Router();
 
 
 
-router.get("/",checkRole(['student']),cacheMiddleware('user'),userController.getUser);
+router.get("/",userController.getUser);
 router.patch("/update",checkRole(['student']),validate(updateUserSchema),userController.updateUser);
 router.delete("/delete",checkRole(['student']),userController.deleteUser);
 

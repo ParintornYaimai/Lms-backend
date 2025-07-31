@@ -9,10 +9,6 @@ export interface noteTypeModel extends Document{
     comments: Types.ObjectId[];
 }
 
-export interface getNoteByIdType{
-    id:Types.ObjectId ,   
-}
-
 export interface createNoteType{
     id:Types.ObjectId
     title: string,

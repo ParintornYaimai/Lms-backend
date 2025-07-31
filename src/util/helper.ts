@@ -9,6 +9,7 @@ import FormData from 'form-data';
 import { Readable } from 'stream';
 import FileType from 'file-type';
 import transporter from '../../config/nodemailer'
+import mongoose from 'mongoose';
 
 export const checkDocxContent = async (fileBuffer: Buffer): Promise<boolean> => {
     try {
@@ -93,8 +94,9 @@ export const checkPptxContent = async(fileBuffer: Buffer): Promise<boolean>=>{
 
 export const checkImage =async(fileBuffer: Buffer): Promise<boolean>=>{
     try {
-
-        const client = new vision.ImageAnnotatorClient();
+        const client = new vision.ImageAnnotatorClient({
+            keyFilename: 'C:/Users/guy18/OneDrive/Desktop/googlekey/heroic-vial-446113-u6-49fdbbd1989e.json'
+        });
         let isSafe = true;
 
         const image = sharp(fileBuffer);
@@ -118,7 +120,6 @@ export const checkImage =async(fileBuffer: Buffer): Promise<boolean>=>{
             
         return isSafe;
     } catch (error: any) {
-        console.log('checkImage error');
         log.error(error.message);
         throw new Error('Error processing image file');
     }
@@ -149,7 +150,6 @@ const bufferToStream =(buffer: Buffer):Readable=> {
 export const checkForVirus =async(fileBuffer: Buffer,fileName: string)=>{
     const apiKey = process.env.API_KEY;
     const url = 'https://www.virustotal.com/api/v3/files';
-    console.log('checkForVirus Active');
     
     try{
 
@@ -200,9 +200,59 @@ export const sendOtpEmail = async(userEmail:string, otp:string) => {
 
         return 'OTP sent successfully';
     } catch (error) {
-        console.log(error);
-        
         return `Error sending OTP: ${error}`;
     }
 };
 
+const imageTypes = {
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg', 
+    'png': 'image/png',
+    'gif': 'image/gif',
+    'webp': 'image/webp',
+    'svg': 'image/svg+xml'
+};
+
+// Videos  
+const videoTypes = {
+    'mp4': 'video/mp4',
+    'avi': 'video/x-msvideo',
+    'mov': 'video/quicktime',
+    'wmv': 'video/x-ms-wmv',
+    'webm': 'video/webm',
+    'mkv': 'video/x-matroska'
+};
+
+// Documents
+const documentTypes = {
+    'pdf': 'application/pdf',
+    'doc': 'application/msword',
+    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'xls': 'application/vnd.ms-excel',
+    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'ppt': 'application/vnd.ms-powerpoint',
+    'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'txt': 'text/plain'
+};
+
+// Audio
+const audioTypes = {
+    'mp3': 'audio/mpeg',
+    'wav': 'audio/wav',
+    'ogg': 'audio/ogg',
+    'aac': 'audio/aac'
+};
+
+// Function to get correct MIME type
+export function getCorrectMimeType(filename: string): string {
+    const ext = filename.split('.').pop()?.toLowerCase();
+    
+    // ตรวจสอบว่า ext มีค่าก่อนใช้เป็น index
+    if(!ext) return 'application/octet-stream';
+    
+    return imageTypes[ext as keyof typeof imageTypes] || 
+           videoTypes[ext as keyof typeof videoTypes] || 
+           documentTypes[ext as keyof typeof documentTypes] || 
+           audioTypes[ext as keyof typeof audioTypes] || 
+           'application/octet-stream'; // fallback
+}

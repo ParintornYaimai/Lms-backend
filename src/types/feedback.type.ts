@@ -1,11 +1,11 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface FeedbackType extends Document {
-    course: mongoose.Types.ObjectId; 
-    student: mongoose.Types.ObjectId;
+    courseId: mongoose.Types.ObjectId; 
+    studentId: mongoose.Types.ObjectId;
     rating: number; 
     text?: string; 
-    reatedAt?: Date; 
+    createdAt?: Date; 
 }
 
 export interface CreateFeedback{

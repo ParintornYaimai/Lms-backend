@@ -9,7 +9,7 @@ export const initRedis = async () => {
         client = createClient({
             socket: {
                 host:`${process.env.HOST}`,
-                port: 18691
+                port: 18448
             },
             password: `${process.env.REDIS_PASSWORD}`,
             username: `${process.env.REDIS_USERNAME}`,

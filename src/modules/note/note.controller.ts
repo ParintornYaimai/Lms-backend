@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
 import log from "../../util/logger";
 import noteService from "./note.service";
+import { string } from "zod";
 
 class noteController{
 
     async getAll(req: Request, res: Response):Promise<void>{
         try {
             const data = await noteService.getAll();
-
             req.app.get('socketIO').emit('note:getAll',data );
             res.status(200).json({success: true,data});
         } catch (error:any) {
@@ -43,15 +43,23 @@ class noteController{
     }
 
     //filter
-    async getByTag(req: Request, res: Response):Promise<void>{
+    async getByTag(req: Request, res: Response): Promise<void> {
         try {
-            const {tag} = req.body;
-            const data = await noteService.getByTag(tag);
+            const tagRaw = req.query.tag;
+            const sortByRaw = req.query.sortBy;
+            const userId = req.query.author as string
+            if (typeof tagRaw !== 'string') {
+                res.status(400).json({ success: false, message: "Tag must be a string" });
+                return;
+            }
 
-            req.app.get('socketIO').to(req.user.id).emit('note:getByTag',data );
-            res.status(200).json({success:true ,data});
-        } catch (error:any) {
-            res.status(500).json({success: false,message:error.message,error:'Internal server error'});
+            const tag: string = tagRaw === 'ALL' ? '' : tagRaw;
+            const sortBy: string = typeof sortByRaw === 'string' ? sortByRaw : 'default'; 
+            const data = await noteService.getByTag(tag, sortBy, userId);
+            req.app.get('socketIO').to(req.user.id).emit('note:getByTag', data);
+            res.status(200).json({ success: true, data });
+        } catch (error: any) {
+            res.status(500).json({ success: false, message: error.message, error: 'Internal server error' });
             log.error(error.message);
         }
     }
@@ -61,8 +69,7 @@ class noteController{
             const {title, tag, description} = req.body;
             const id = req.user.id;  
             const data = await noteService.create({title, tag, description, id});
-
-            req.app.get('socketIO').to(req.user.id).emit('note:create',data );
+            req.app.get('socketIO').emit('note:create',data );
             res.status(200).json({success:true ,message:"Creation successful"});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'});
@@ -97,6 +104,7 @@ class noteController{
             log.error(error.message);
         }
     }
+    
 }
 
 export default new noteController()

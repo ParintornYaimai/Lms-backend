@@ -6,7 +6,7 @@ import { checkRole } from '../../middleware/checkRole';
 
 const router = express.Router()
 
-router.get('/search',checkRole(['student']),addFriends.search) // search user   
+router.get('/search/:email',checkRole(['student']),addFriends.search) // search user   
 router.get('/getAll',checkRole(['student']),addFriends.getAll) // get all req friends    
 router.post('/sendReq',checkRole(['student']),validate(addFriendRequestSchema),addFriends.create) //add friends    
 router.patch('/acceptReq/:id',checkRole(['student']),addFriends.update) //accept req      

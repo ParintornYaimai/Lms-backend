@@ -9,6 +9,7 @@ import {initRedis} from '../config/connectToRedis'
 import scheduleJobs from './crons/scheduleJobs'
 import {authRateLimiter, publicRateLimiter} from './util/rateLimit'
 import { initializeSocket } from './socket/socket';
+import { setupSwagger } from "../config/swagger";
 
 //route
 import authRouter from './modules/auth/auth.routes' 
@@ -36,7 +37,7 @@ const server = http.createServer(app)
 const io = initializeSocket(server)
 
 // cors option
-const allowedOrigins = ['http://localhost:3000','http://localhost:3001','https://educationwingplatform.com'];
+const allowedOrigins = ['http://localhost:3000','http://localhost:3001','https://educationwingplatform.com','http://localhost:5500'];
 const corsOption: CorsOptions  = {
     origin: (origin,callback) =>{
         if(!origin || allowedOrigins.includes(origin)  ){
@@ -56,24 +57,24 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookiePaser())
 app.set('socketIO', io);
-
+setupSwagger(app)
 
 
 //route
-app.use('/api/auth',authRateLimiter,authRouter);
-app.use('/api/note',publicRateLimiter,authenticateToken,noteRouter);
-app.use('/api/comment',publicRateLimiter,authenticateToken,commentRouter);
-app.use('/api/assignment',publicRateLimiter,authenticateToken,assignmentRouter)
-app.use('/api/user', publicRateLimiter,authenticateToken,userRouter);
-app.use('/api/file',publicRateLimiter,authenticateToken,upload)
-app.use('/api/course',publicRateLimiter,authenticateToken,course)
-app.use('/api/enrolle',publicRateLimiter,authenticateToken,enrolle)
+app.use('/api/auth',authRateLimiter,authRouter); //s
+app.use('/api/note',publicRateLimiter,authenticateToken,noteRouter); //s
+app.use('/api/comment',publicRateLimiter,authenticateToken,commentRouter); //s
+app.use('/api/assignments',publicRateLimiter,authenticateToken,assignmentRouter) //p
+app.use('/api/user', publicRateLimiter,authenticateToken,userRouter); //s
+app.use('/api',publicRateLimiter,upload)
+app.use('/api/courses',publicRateLimiter,authenticateToken,course) //p
+app.use('/api/enrolled',publicRateLimiter,authenticateToken,enrolle) //p
 app.use('/api/feedback',publicRateLimiter,authenticateToken,feedback)
-app.use('/api/addfriend',publicRateLimiter,authenticateToken,addfriends)
-app.use('/api/chat',publicRateLimiter,authenticateToken,chat)
-app.use('/api/message',publicRateLimiter,authenticateToken,message)
+app.use('/api/friends',publicRateLimiter,authenticateToken,addfriends)
+app.use('/api/chats',publicRateLimiter,authenticateToken,chat)
+app.use('/api/messages',publicRateLimiter,authenticateToken,message)
 app.use('/api/dashboard',publicRateLimiter,authenticateToken,dashboard)
-app.use('/api/resource',publicRateLimiter,authenticateToken,resource)
+app.use('/api/resources',publicRateLimiter,authenticateToken,resource)
 
 const port = process.env.PORT 
 server.listen(port,async()=> {

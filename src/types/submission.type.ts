@@ -1,11 +1,10 @@
 import { Types } from "mongoose";
 
 export interface File {
-    url: string;
-    type: "pdf" | "doc" | "docx" | "ppt" | "pptx" | "jpg" | "jpeg" | "png";
-    size: number;  // ขนาดไฟล์ใน KB หรือ MB
+  fileId: string;
+  filename: string;
+  fileUrl: string;
 }
-
 export interface SubmissionTypeModel {
     assignmentId: Types.ObjectId;  
     studentId: Types.ObjectId;     

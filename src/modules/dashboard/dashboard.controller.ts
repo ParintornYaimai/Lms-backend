@@ -16,6 +16,39 @@ class dashboardController{
         }
     }
 
+    async latestDocuments(req: Request, res: Response){
+        try{
+            const data = await dashboardService.Resource(req.user.id);
+
+            res.status(200).json(data);
+        }catch (error:any) {
+            res.status(500).json({success: false,message:error.message,error:'Internal server error'});
+            log.error(error.message);
+        }
+    }
+
+    async recentEnrolled(req: Request, res: Response){
+        try{
+            const data = await dashboardService.RecentEnrolled(req.user.id);
+
+            res.status(200).json(data);
+        }catch (error:any) {
+            res.status(500).json({success: false,message:error.message,error:'Internal server error'});
+            log.error(error.message);
+        }
+    }
+
+    async taskProgress(req: Request, res: Response){
+        try{
+            const data = await dashboardService.taskProgress(req.user.id);
+
+            res.status(200).json(data);
+        }catch (error:any) {
+            res.status(500).json({success: false,message:error.message,error:'Internal server error'});
+            log.error(error.message);
+        }
+    }
+
 }
 
 export default new dashboardController();

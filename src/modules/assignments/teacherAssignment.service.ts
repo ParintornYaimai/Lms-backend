@@ -1,49 +1,133 @@
-import {AssignmentTypeModel, ICourseDocument } from '../../types/assignment.type';
-import {AssignmentModel} from '../../model/assignment.Model'
-import {CourseModel} from '../../model/course.Model'
-import { TeacherModel } from '../../model/teacher.Model';
-import {SubmissionModel} from '../../model/submission.Model'
+import { AssignmentTypeModel } from '../../types/assignment.type';
+import { AssignmentModel } from '../../model/assignment.Model'
+import { CourseModel } from '../../model/course.Model'
+import { SubmissionModel } from '../../model/submission.Model'
 import { updateScoreInSubmission } from '../../types/submission.type';
 import { EnrolledModel } from '../../model/enrolled.Model';
+import mongoose from 'mongoose';
+import { studentModel } from '../../model/student.Model';
+import { SubCategoryModel } from '../../model/category.Model';
 
 
-class teacherAssignment{
-    
+class teacherAssignment {
+
     private async checkAssignmentOwnership(assignmentId: string, teacherId: string) {
 
-        const assignment = await AssignmentModel.findById(assignmentId).populate<{ courseId: ICourseDocument }>('courseId');
+        if(!assignmentId || !teacherId){
+            throw new Error("Assignment ID and Teacher ID are required");
+        }
+        if(!mongoose.Types.ObjectId.isValid(assignmentId)){
+            throw new Error("Invalid assignment ID format");
+        }
+        if(!mongoose.Types.ObjectId.isValid(teacherId)){
+            throw new Error("Invalid teacher ID format");
+        }
 
-        if(!assignment) throw new Error("Assignment not found");
+        const [assignment] = await AssignmentModel.aggregate([
+            {
+                $match: { _id: new mongoose.Types.ObjectId(assignmentId) }
+            },
+            {
+                $lookup: {
+                    from: CourseModel.collection.name,
+                    localField: 'courseId',
+                    foreignField: '_id',
+                    as: 'course'
+                }
+            },
+            {
+                $match: {
+                    'course.createby': new mongoose.Types.ObjectId(teacherId)
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    title: 1,
+                    description: 1,
+                    date: 1,
+                    courseId: 1,
+                    course: { $arrayElemAt: ['$course', 0] }
+                }
+            }
+        ]);
 
-        const courseOwnerId = assignment.courseId.createby.toString();
-        if(courseOwnerId !== teacherId) throw new Error("You don't have permission to access this assignment");
-
+        if(!assignment) throw new Error("Assignment not found or you don't have permission to access it");
+        
         return assignment;
     }
 
     //teacher
-    async getAll(teacherId: string){
-        const courseData = await CourseModel.find({createby: teacherId}).lean();
-        if(courseData.length === 0) throw new Error("Course not found");
-            
-        const courseDataId = courseData.map(course=> course._id);
-        const assignmentData = await AssignmentModel.find({courseId: courseDataId}).select('-createdAt -updatedAt').lean()
-        if(assignmentData.length === 0 ) throw new Error("Assignment not found");
+    async getAll(teacherId: string) {
+        const assignmentData = await AssignmentModel.aggregate([
+            {
+                $lookup: {
+                    from: CourseModel.collection.name,
+                    localField: "courseId",
+                    foreignField: "_id",
+                    as: "courseInfo"
+                }
+            },
+            { $unwind: "$courseInfo" },
+            {
+                $match: {
+                    "courseInfo.createby": new mongoose.Types.ObjectId(teacherId)
+                }
+            },
+            {
+                $lookup: {
+                    from: SubCategoryModel.collection.name, // ชื่อ collection ต้องตรงกับใน MongoDB
+                    localField: "courseInfo.coursesubjectcate",
+                    foreignField: "_id",
+                    as: "subjectInfo"
+                }
+            },
+            { $unwind: { path: "$subjectInfo", preserveNullAndEmptyArrays: true } },
+            {
+                $project: {
+                    _id: 1,
+                    title: 1,
+                    passpercen: 1,
+                    totalmark: 1,
+                    date: 1,
+                    status: 1,
+                    files: 1,
+                    courseId: "$courseInfo._id",
+                    courseTitle: "$courseInfo.title",
+                    courseSubjectCate: "$subjectInfo.name" 
+                }
+            }
+        ]);
 
+        if(assignmentData.length === 0) throw new Error("Assignment not found");
         return assignmentData;
     }
 
-    async create({title, courseId, passpercen, date, files, totalmark, status}:AssignmentTypeModel){
+    async getById(assignmentId: string){
+        const assignmentData = await AssignmentModel.findById(assignmentId)
+        .populate({
+            path: 'courseId',
+            select: 'title subtitle coursesubjectcate', 
+            populate: {
+            path: 'coursesubjectcate',
+            select: 'name', 
+            },
+        });
+
+        return assignmentData
+    }
+
+    async create({ title, courseId, passpercen, date, files, totalmark, status }: AssignmentTypeModel) {
         const course = await CourseModel.findById(courseId).lean();
         if(!course) throw new Error("Course not found");
-        
+
         return await AssignmentModel.create({
-            title, 
-            courseId, 
-            passpercen, 
-            date, 
-            files, 
-            totalmark, 
+            title,
+            courseId,
+            passpercen,
+            date,
+            files,
+            totalmark,
             status
         });
     }
@@ -51,40 +135,88 @@ class teacherAssignment{
     // update assignment 
     async updateAssignment(assignmentId: string, updateData: Partial<AssignmentTypeModel>, teacherId: string) {
         await this.checkAssignmentOwnership(assignmentId, teacherId);
-    
+
         const updatedAssignment = await AssignmentModel.findByIdAndUpdate(assignmentId, updateData, { new: true });
-        if (!updatedAssignment) throw new Error("Assignment not found");
-    
+        if(!updatedAssignment) throw new Error("Assignment not found");
+
         return updatedAssignment;
     }
 
-    async getResult(assignmentId: string,teacherId: string){
+    async getResult(assignmentId: string, teacherId: string) {
         await this.checkAssignmentOwnership(assignmentId, teacherId);
-
-        const userInSubmissios = await SubmissionModel.find({assignmentId}).select('-_id -status -createdAt -updatedAt').lean();
-        if(userInSubmissios.length === 0) throw new Error("Data not found");
         
-        return userInSubmissios;
+        const submitter = SubmissionModel.aggregate([
+            {
+                $match: { 
+                    assignmentId: new mongoose.Types.ObjectId(assignmentId),
+                    files: { $exists: true, $ne: [] },
+                    score: 0
+                }
+            },
+            { $sort: { createdAt: -1 } },
+            {
+                $lookup:{
+                    from:studentModel.collection.name,
+                    localField:'studentId',
+                    foreignField:'_id',
+                    as: 'studentInfo'
+                }
+            },
+            {
+                $unwind: "$studentInfo"
+            },
+            {
+                $addFields: {
+                    formattedCreatedAt: {
+                        $dateToString: {
+                        format: "%d/%m/%Y", //วัน-เดือน-ปี
+                        date: "$createdAt",
+                        timezone: "Asia/Bangkok" 
+                        }
+                    }
+                }
+            },
+            {
+                $project:{
+                    _id: 1,
+                    "formattedCreatedAt": 1,
+                    "studentInfo._id":1,
+                    "studentInfo.firstname": 1,
+                    "studentInfo.lastname": 1,
+                    "files":1,
+                    "status":1,
+                    "score":1,
+
+                }
+            }
+        ]);
+
+        return submitter ;
     }
 
     // update score
-    async updateScore({assignmentId, updates}: updateScoreInSubmission,teacherId: string){
+    async updateScore({ assignmentId, updates }: updateScoreInSubmission, teacherId: string) {
         await this.checkAssignmentOwnership(assignmentId, teacherId);
+        if(!updates) throw new Error("No updates provided");
 
-        const updatePromises = updates.map(update =>
-            SubmissionModel.updateOne(
-                { assignmentId, studentId: update.studentId },
-                { $set: { score: update.score } }
-            )
-        );
-        const results = await Promise.all(updatePromises);
-        const allUpdated = results.every(result => result.modifiedCount > 0);
+        const bulkOperations = updates.map(update => ({
+            updateOne: {
+                filter: { 
+                    assignmentId, 
+                    studentId: new mongoose.Types.ObjectId(update.studentId) 
+                },
+                update: { 
+                    $set: { 
+                        score: update.score,
+                    } 
+                }
+            }
+        }));
 
-        if(allUpdated){
-            return "Scores updated successfully";
-        }else{
-            throw new Error("Update failed");
-        }
+        const bulkResult = await SubmissionModel.bulkWrite(bulkOperations, {ordered: false});
+        
+        const successCount = bulkResult.modifiedCount; 
+        if(successCount != 0) return "Scores updated successfully";
     }
 
     async delete(assignmentId: string, teacherId: string) {
@@ -94,45 +226,59 @@ class teacherAssignment{
         return AssignmentModel.findByIdAndDelete(assignmentId);
     }
 
-    async checkOverdueSubmissions(){
+    async checkOverdueSubmissions() {
         const currentDate = new Date();
-
-        //find Assignment over value duedate
-        const assignments = await AssignmentModel.find({
-            "date.end": { $lt: currentDate }
-        }).lean();
-
-        const bulkOps:any[] = [];
-        for(const assignment of assignments){
-            //find all submission in assignment
-            const submissions = await SubmissionModel.find({ assignmentId: assignment._id });
-
-            // find student is enrolled in Course
-            const studentInCourse = await EnrolledModel.find({ course: assignment.courseId }).populate("student").lean();
-            if(!studentInCourse) throw new Error("Student not found");
-
-            for(const student of studentInCourse){
-                if(student.student){
-                    //find student in course not submit Assignment
-                    const submissionExists = submissions.find(sub => sub.studentId.toString() === student._id.toString());
-                    if(!submissionExists){
-                        bulkOps.push({
-                            insertOne: {
-                                document: {
-                                    assignmentId: assignment._id,
-                                    studentId: student.student._id,
-                                    status: "Overdue",
-                                }
-                            }
-                        });
+        
+        const overdueData = await AssignmentModel.aggregate([
+            {
+                $match: {
+                    "date.end": { $lt: currentDate }
+                }
+            },
+            {
+                $lookup: {
+                    from: EnrolledModel.collection.name,
+                    localField: "courseId", 
+                    foreignField: "course",
+                    as: "enrolledStudents"
+                }
+            },
+            {
+                $lookup: {
+                    from: SubmissionModel.collection.name,
+                    localField: "_id",
+                    foreignField: "assignmentId", 
+                    as: "submissions"
+                }
+            },
+            {
+                $unwind: "$enrolledStudents"
+            },
+            {
+                $match: {
+                    $expr: {
+                        $not: {
+                            $in: ["$enrolledStudents.student", "$submissions.studentId"]
+                        }
                     }
                 }
-            }  
+            },
+            {
+                $project: {
+                    assignmentId: "$_id",
+                    studentId: "$enrolledStudents.student", 
+                    status: { $literal: "Overdue" }
+                }
+            }
+        ]);
+        
+        if(overdueData.length > 0){
+            const bulkOps = overdueData.map(data => ({ insertOne: { document: data }}));
+            
+            await SubmissionModel.bulkWrite(bulkOps, { ordered: false });
         }
-
-        if(bulkOps.length > 0) await SubmissionModel.bulkWrite(bulkOps);
     }
-    
+
 }
 
 export default new teacherAssignment();

@@ -19,6 +19,7 @@ class uploadService {
 
             const uploadStream = gfs.openUploadStream(filename);
 
+            uploadStream.setMaxListeners(40)
             let uploadedChunksCount = 0;
 
             const uploadChunk = (chunk: Buffer) => {
@@ -39,7 +40,6 @@ class uploadService {
                 });
 
                 bufferStream.on('error', (err) => {
-                    console.log('upload error', err);
                     reject(new Error(err.message));
                 });
             };
@@ -51,10 +51,16 @@ class uploadService {
     async getById(id: string){
         if(!gfs) throw new Error('GridFSBucket is not initialized');
 
-        const file = await gfs.find({ _id: new mongoose.Types.ObjectId(id) }).toArray();
-        if(!file || file.length === 0) throw new Error('File not found')
+        const fileInfo  = await gfs.find({ _id: new mongoose.Types.ObjectId(id) }).toArray();
+        if(!fileInfo  || fileInfo .length === 0) throw new Error('File not found')
+            
+        const file = fileInfo[0];
 
-        return gfs.openDownloadStream(new mongoose.Types.ObjectId(id));
+        return {
+            stream: gfs.openDownloadStream(file._id),
+            filename: file.filename,
+            contentType: file.contentType || 'application/octet-stream'
+        };
     }
 }
 

@@ -46,16 +46,16 @@ export const updateAssignmentSchema = z.object({
 
 
 export const createAssignmentForStudentSchema = z.object({
-    courseId: z.string().refine((val) => Types.ObjectId.isValid(val), {
-        message: "Invalid ObjectId format", 
-    }),
+    // courseId: z.string().refine((val) => Types.ObjectId.isValid(val), {
+    //     message: "Invalid ObjectId format", 
+    // }),
     assignmentId: z.string().refine((val) => Types.ObjectId.isValid(val), {
         message: "Invalid ObjectId format", 
     }),
     files: z.array(z.object({
-        url: z.string().url(), 
-        type: z.enum(["pdf", "doc", "image", "docx", "ppt", "pptx"]),
-        size: z.number().positive(), 
+        fileId: z.string(),
+        filename: z.string(),
+        fileUrl: z.string()
     })).default([]),
 });
 
@@ -63,7 +63,7 @@ export const updateScoreAssignmentSchema = z.object({
     assignmentId: z.string().refine((val) => Types.ObjectId.isValid(val), {
         message: "Invalid ObjectId format",  
     }),
-    scores: z.array(z.object({
+    updates: z.array(z.object({
         studentId: z.string(),
         score: z.number(),
     }))

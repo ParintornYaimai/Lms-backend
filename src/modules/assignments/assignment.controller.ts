@@ -5,23 +5,25 @@ import studentAssignment from './studentAssignment.service'
 
 class assignmentController{
     //student 
-    async getAllSubmission(req: Request, res: Response):Promise<void>{ 
+    async getAllAssignment(req: Request, res: Response):Promise<void>{ 
         try {
             const page = parseInt(req.query.page as string) || 1; 
             const limit = parseInt(req.query.limit as string) || 10; 
+            const date = req.query.date as string;
+            const status = req.query.status as string;
             
-            const data = await studentAssignment.getAll(limit, page, req.params.id, req.user.id);
+            const data = await studentAssignment.getAll(limit, page, req.user.id, date, status);
             
             req.app.get('socketIO').emit('assignment:getAllSubmission',data );
-            res.status(500).json({success: true, data});
+            res.status(200).json({success: true, data});
         } catch (error: any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})
             log.error(error.message);
         }
     }
     
-    //ส่งการบ้านs
-    async createSubmission(req: Request, res: Response):Promise<void>{
+    //ส่งการบ้าน
+    async sendAssignment(req: Request, res: Response):Promise<void>{
         try {
             const {assignmentId, files } = req.body;
             const studentId = req.user.id;
@@ -40,6 +42,18 @@ class assignmentController{
     async getAll(req: Request, res: Response):Promise<void>{
         try {
             const data = await assignmentTeacherService.getAll(req.user.id);
+
+            req.app.get('socketIO').to(req.user.id).emit('assignment:getAll',data );
+            res.status(200).json({success: true, data});
+        } catch (error: any){
+            res.status(500).json({success: false,message:error.message,error:'Internal server error'})
+            log.error(error.message);
+        }
+    }
+
+    async getById(req: Request, res: Response):Promise<void>{
+        try {
+            const data = await assignmentTeacherService.getById(req.params.id);
 
             req.app.get('socketIO').to(req.user.id).emit('assignment:getAll',data );
             res.status(200).json({success: true, data});

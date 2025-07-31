@@ -2,70 +2,161 @@ import { MessageModel } from '../../model/messages.Model';
 import {ChatModel, ChatgroupModel} from '../../model/chat.Model'
 import { AddFriendReqModel } from '../../model/friendrequest.Model';
 import mongoose, { Types } from 'mongoose';
+import { studentModel } from '../../model/student.Model';
 
 class chatService{
 
-    async getAllFriends(userId: string){
-
+    async getAllFriends(userId: string) {
         const friends = await AddFriendReqModel.find({
             $or: [
-                { fromUser: userId},
-                { toUser: userId},
-                {status: 'accepted'}
+                { fromUserId: userId, status: 'accepted' },
+                { toUserId: userId, status: 'accepted' }
             ]
-        });
-        if(friends.length === 0) throw new Error('No friends');
-        
-        return friends
-    }
-    
-    async getAll(userId:string){
-        const [chatData, chatGroups] = await Promise.all([
-            ChatModel.find({ $or: [{ sender: userId }, { receiver: userId }] }).populate("sender receiver", "username email profilepicture"), 
-            ChatgroupModel.find({ "people.user": userId }).populate("people.user", "username email profilepicture") 
-        ]);
-        
-        const allChats = [...chatData,...chatGroups.flat()];
-        if(allChats.length === 0) throw new Error('Data not found')
+        })
+        .populate('fromUserId', 'firstname lastname profilepicture')
+        .populate('toUserId', 'firstname lastname profilepicture')
+        .lean()
 
-        const chatsWithLatestMessage = await Promise.all(
-            allChats.map(async (chat) => {
-                if('sender' in chat && 'receiver' in chat){
-                    const latestMessage = await MessageModel.findOne({ chatroom: chat._id })
-                    .sort({ createdAt: -1 })
-                    .select('-_id -chatroom -createdAt -updatedAt ')
-                    .populate('receiver','username email profilepicture')
-                    .populate('sender','username email profilepicture')
-                    .lean();
-                    
-                    return { ...chat.toObject(), latestMessage };
-                    
-                }else if ('people' in chat){
-                    const latestMessage = await MessageModel.findOne({ chatroom: chat._id })
-                    .sort({ createdAt: -1 })
-                    .select('-_id -chatroom -createdAt -updatedAt')
-                    .populate('chatroom')
-                    .populate('receiver','username email profilepicture')
-                    .populate('sender','username email profilepicture')
-                    .lean();
-        
-                    return { ...chat.toObject(), latestMessage, people: chat.people.map(p => p.user) };
+        if(friends.length === 0) return [];
+
+        const friendProfiles = [];
+        for(let i = 0; i < friends.length; i++){
+            const friendship = friends[i];
+            const isFromUser = friendship.fromUserId._id.toString() === userId;
+            friendProfiles.push(isFromUser ? friendship.toUserId : friendship.fromUserId);
+        }
+
+        return friendProfiles;
+    }
+
+    
+    async getAll(userId: string) {
+
+        const [chatData, chatGroups] = await Promise.all([
+            ChatModel.find({ $or: [{ sender: userId }, { receiver: userId }] })
+            .populate("sender receiver", "firstname lastname email profilepicture")
+            .lean(),
+            ChatgroupModel.find({ "people.user": userId })
+            .populate("people.user", "firstname lastname email profilepicture")
+            .lean()
+        ]);
+
+        const allChats = [...chatData, ...chatGroups];
+        if (allChats.length === 0) throw new Error('Data not found');
+
+        const chatroomIds = allChats.map(chat => chat._id);
+
+        const latestMessages = await MessageModel.aggregate([
+            {
+                $match: {
+                    chatroom: { $in: chatroomIds }
                 }
-                return null;
-            })
-        );
-        
-        const sortedChats = chatsWithLatestMessage.sort((a, b) => {
-            if(a && b){
-                const aTime = a.latestMessage?.createdAt?.getTime() || 0;
-                const bTime = b.latestMessage?.createdAt?.getTime() || 0;
-                return bTime - aTime;
+            },
+            {
+                $sort: { createdAt: -1 }
+            },
+            {
+                $group: {
+                    _id: "$chatroom",
+                    latestMessage: { $first: "$$ROOT" }
+                }
+            },
+            {
+                $lookup: {
+                    from: studentModel.collection.name, 
+                    localField: "latestMessage.sender",
+                    foreignField: "_id",
+                    as: "latestMessage.sender",
+                    pipeline: [
+                        {
+                            $project: {
+                                firstname: 1,
+                                lastname: 1,
+                                email: 1,
+                                profilepicture: 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                $lookup: {
+                    from: studentModel.collection.name,
+                    localField: "latestMessage.receiver",
+                    foreignField: "_id",
+                    as: "latestMessage.receiver",
+                    pipeline: [
+                        {
+                            $project: {
+                                firstname: 1,
+                                lastname: 1,
+                                email: 1,
+                                profilepicture: 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                $addFields: {
+                    "latestMessage.sender": { $arrayElemAt: ["$latestMessage.sender", 0] },
+                    "latestMessage.receiver": { $arrayElemAt: ["$latestMessage.receiver", 0] }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    chatroomId: "$_id",
+                    latestMessage: {
+                        $mergeObjects: [
+                            "$latestMessage",
+                            {
+                                _id: "$$REMOVE",
+                                chatroom: "$$REMOVE",
+                                createdAt: "$$REMOVE",
+                                updatedAt: "$$REMOVE"
+                            }
+                        ]
+                    }
+                }
             }
-            return 0; 
+        ]);
+
+        const messageMap = new Map(latestMessages.map(item => [item.chatroomId.toString(), item.latestMessage]));
+
+        // ประมวลผลข้อมูล chat
+        const chatsWithLatestMessage = allChats.map(chat => {
+            const latestMessage = messageMap.get(chat._id.toString());
+            
+            if('sender' in chat && 'receiver' in chat){
+                // แชทแบบ 1-1
+                const otherUser = chat.sender._id.toString() === userId ? chat.receiver : chat.sender;
+
+                return{
+                    ...chat,
+                    latestMessage,
+                    otherUser,
+                };
+            }else if('people' in chat){
+                return{
+                    ...chat,
+                    latestMessage,
+                    people: chat.people.map(p => p.user),
+                };
+            }
+            return null;
+        }).filter(Boolean);
+
+        // เรียงลำดับตาม timestamp
+        const sortedChats = chatsWithLatestMessage.sort((a, b) => {
+            const aTime = a?.latestMessage?.createdAt?.getTime() || 0;
+            const bTime = b?.latestMessage?.createdAt?.getTime() || 0;
+            return bTime - aTime;
         });
-        
+
         return sortedChats;
-    }   
+    }
+ 
 
     async create(sender: string, receiver: string){
         const checkChat = await ChatModel.findOne({
@@ -93,64 +184,70 @@ class chatService{
     }
 
     async addMember(groupChatId: string, peopleId: string[]) {
-        const checkChat = await ChatgroupModel.findById(groupChatId);
-    
-        const newPeopleId = peopleId.map((id) => ({ user: new Types.ObjectId(id) }));
-    
-        if(checkChat){
-            const existingMembers = checkChat.people.map((member) => member.user.toString());
-            const membersToAdd = newPeopleId.filter(
-                (newMember) => !existingMembers.includes(newMember.user.toString())
-            );
-            
-            if(membersToAdd.length > 0){
-                checkChat.people.push(...membersToAdd);
-                const result = await checkChat.save();
-                return result;
-            }else{
-                return checkChat; 
-            }
-        }else{
-            const createGroupChat = await ChatgroupModel.create({
-                members: newPeopleId
-            });
-            return createGroupChat;
-        }
+        const uniqueIds = [...new Set(peopleId)];
+        const newPeopleObjectIds = uniqueIds.map(id => new Types.ObjectId(id));
+        
+        const result = await ChatgroupModel.findByIdAndUpdate(
+            groupChatId,
+            {
+                $addToSet: {
+                    people: {
+                        $each: newPeopleObjectIds.map(id => ({ user: id }))
+                    }
+                }
+            },
+            { new: true, lean: true }
+        );
+        
+        if(!result) throw new Error(`Group chat with ID ${groupChatId} not found`);
+
+        return result;
     }
 
 
     async delete(chatId: string, userId: string) {
         const session = await mongoose.startSession();
         session.startTransaction();
-    
-        try {
-            const chat = await ChatModel.findById(chatId).session(session);
-            const chatGroup = await ChatgroupModel.findById(chatId).session(session);
-    
-            if(chat){
-                if(chat.sender.toString() === userId || chat.receiver.toString() === userId){
-                    await ChatModel.findByIdAndUpdate(chatId, {
-                        $set: { isDeleted: true } 
-                    }).session(session);
-                }
-            }else if(chatGroup){
 
-                chatGroup.people = chatGroup.people.filter((p: any) => p.user.toString() !== userId);
-                await chatGroup.save({ session });
+        try{
+            // ลอง find ใน ChatModel ก่อน
+            const chat = await ChatModel.findById(chatId).session(session);
+            
+            if(chat){
+                
+                // ตรวจสอบว่า user เป็น sender หรือ receiver
+                if(chat.sender.toString() === userId || chat.receiver.toString() === userId){
+                    await ChatModel.findByIdAndUpdate(
+                        chatId, 
+                        { $set: { isDeleted: true } },
+                        { session }
+                    );
+                }else{
+                    throw new Error("You are not authorized to delete this chat");
+                }
             }else{
-                throw new Error("Chat not found");
+
+                const result = await ChatgroupModel.findByIdAndUpdate(
+                    chatId,
+                    { $pull: { people: { user: new Types.ObjectId(userId) } } },
+                    { session, new: true }
+                );
+                if(!result)throw new Error("Chat not found");
+
+                // ตรวจสอบว่า user เคยเป็นสมาชิกหรือไม่
+                const wasUpdated = result.people.some(p => p.user.toString() !== userId);
+                if(!wasUpdated) throw new Error("You are not a member of this group");
             }
-    
+
             await session.commitTransaction();
-            session.endSession();
-    
             return { success: true, message: "You have left the chat." };
         }catch(error){
             await session.abortTransaction();
-            session.endSession();
             throw error;
+        }finally{
+            session.endSession();
         }
-    }
+    }   
     
 }
 

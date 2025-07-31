@@ -6,15 +6,29 @@ import mongoose from "mongoose";
 
 class addFriendsService{
     
-    async getAll(userId: string){
-        const getAllReq = await AddFriendReqModel.find({fromuser: userId})
-        .populate("fromuser","firstname lastname")
-        .populate("toUserId","firstname lastname")
+    async getAll(userId: string) {
+        const getAllReq = await AddFriendReqModel.find({
+            toUserId: userId,
+            status: { $in: ['accepted', 'pending'] }
+        })
+        .populate("fromUserId", "firstname lastname profilepicture")
+        .sort({ 
+            status: 1 // เรียงตาม status แบบ ascending → 'accepted' > 'pending'
+        })
         .lean();
-        if(!getAllReq) throw new Error("Data not found");
 
-        return getAllReq;
+        if (!getAllReq || getAllReq.length === 0) throw new Error("Data not found");
+
+        // เรียงใหม่แบบ custom ให้ pending ขึ้นก่อน (กรณีต้องควบคุมมากกว่า)
+        const sorted = getAllReq.sort((a, b) => {
+            if (a.status === 'pending' && b.status === 'accepted') return -1;
+            if (a.status === 'accepted' && b.status === 'pending') return 1;
+            return 0;
+        });
+
+        return sorted;
     }
+
 
     async search(email: string, userId: string){
         const searchEmail = await studentModel.findOne({email}).select('_id firstname lastname profilepicture')
@@ -26,38 +40,41 @@ class addFriendsService{
         return searchEmail;
     }
         
-    async create({fromuser, toUserId }: createReq ){
-        if(fromuser.toString() === toUserId.toString()) throw new Error("You cannot send a friend request to yourself.");
+    async create({fromUserId, toUserId }: createReq ){
+        if(fromUserId.toString() === toUserId.toString()) throw new Error("You cannot send a friend request to yourself.");
 
         const checkReq = await AddFriendReqModel.findOne({
             $or: [
-                { fromuser, toUserId }, 
-                { fromuser: toUserId, toUserId: fromuser } 
+                { fromUserId, toUserId }, 
+                { fromUserId: toUserId, toUserId: fromUserId } 
             ],
             status: { $in: ["pending", "accepted"] } 
         });
         if (checkReq) throw new Error("Friend request already exists or you are already friends.");
         
-        const createReq = await AddFriendReqModel.create({ fromuser, toUserId, status: "pending" });
+        const createReq = await AddFriendReqModel.create({ fromUserId, toUserId, status: "pending" });
         if(!createReq) throw new Error("Unable to send request");
     
         return createReq; 
     }
 
-    async updated(userId: string, toUserId: string){
-        const deleted = await AddFriendReqModel.findOneAndUpdate({
-            fromuser: userId, 
-            toUserId: toUserId,
+    async updated(toUserId: string){
+        const friendRequest = await AddFriendReqModel.findById(toUserId);
+        if (!friendRequest) throw new Error("The friend request does not exist.");
 
-        },{status:'accepted'});
+        const update = await AddFriendReqModel.updateOne(
+            { _id: friendRequest._id }, 
+            { $set: { status: 'accepted' } } 
+        );
+        
+        if(update.modifiedCount === 0)throw new Error("The friend request cannot be updated.");
     
-        if (!deleted) throw new Error("The request cannot be updated."); 
         return { success: true, message: "Friend request accepted successfully" };
     }
 
     async delete(userId: string, toUserId: string){
         const deleted = await AddFriendReqModel.findOneAndDelete({
-            fromuser: userId, 
+            fromUserId: userId, 
             toUserId: toUserId
         });
     

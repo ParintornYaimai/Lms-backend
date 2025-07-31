@@ -19,7 +19,7 @@ class addFriendsController{
 
     async search(req: Request, res: Response){
         try {
-            const searchData = await addFriendsService.search(req.body.email, req.user.id);
+            const searchData = await addFriendsService.search(req.params.email, req.user.id);
 
             req.app.get('socketIO').to(req.user.id).emit('addFriend:search',searchData );
             res.status(200).json({success: true,searchData})
@@ -30,9 +30,9 @@ class addFriendsController{
     }
 
     async create(req: Request, res: Response){
-        const {fromuser, toUserId } = req.body;
+        const {toUserId } = req.body;
         try {
-            const createData = await addFriendsService.create({fromuser, toUserId });
+            const createData = await addFriendsService.create({fromUserId:req.user.id, toUserId });
 
             req.app.get('socketIO').to(req.user.id).emit('addFriend:create',createData );
             res.status(200).json({success: true,createData})
@@ -45,7 +45,7 @@ class addFriendsController{
     async update(req: Request, res: Response){
         const toUserId = req.params.id
         try {
-            const updated = await addFriendsService.updated(req.user.id, toUserId)
+            const updated = await addFriendsService.updated(toUserId)
 
             req.app.get('socketIO').to(req.user.id).emit('addFriend:update',updated );
             res.status(200).json({success: true,updated})

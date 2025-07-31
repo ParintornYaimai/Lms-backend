@@ -1,8 +1,7 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import { Types } from "mongoose";
 import log from "../../util/logger";
 import commentService from "./comment.service"
-import { CreateComment } from "src/schema/comment.schema";
 
 
 class commmentController{
@@ -18,7 +17,7 @@ class commmentController{
             const noteId = new Types.ObjectId(note);
             const data = await commentService.create({content, noteId, author})
             
-            req.app.get('socketIO').to(author).emit('comment:create',data );
+            req.app.get('socketIO').emit('comment:create',data );
             res.status(200).json({success:true ,message:"Creation successful"});
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})
@@ -32,8 +31,7 @@ class commmentController{
             const accountOwnerId = req.user.id;
             
             const data = await commentService.delete({id, accountOwnerId })
-
-            req.app.get('socketIO').to(id).emit('comment:delete',data );
+            req.app.get('socketIO').emit('comment:delete',data );
             res.status(200).json({success:true,message:'Delete successful'})
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})

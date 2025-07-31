@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 
 export interface addFriendsReq extends Document{
-    fromuser: Types.ObjectId; 
+    fromUserId: Types.ObjectId; 
     toUserId: Types.ObjectId;
     status: "pending" | "accepted" ;
     createdAt?: Date; 
@@ -9,7 +9,7 @@ export interface addFriendsReq extends Document{
 }
 
 export interface createReq {
-    fromuser: Types.ObjectId;
+    fromUserId: Types.ObjectId;
     toUserId: Types.ObjectId;
 }
 

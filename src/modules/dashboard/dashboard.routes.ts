@@ -5,9 +5,10 @@ import { checkRole } from "../../middleware/checkRole";
 
 const router = express.Router();
 
-
-router.get('/',checkRole(['student']),dashboardController.finishAssignment)
-
+router.get('/finishAssignment',checkRole(['student']),dashboardController.finishAssignment)
+router.get('/latestDocuments',checkRole(['student']),dashboardController.latestDocuments)
+router.get('/recentEnrolled',checkRole(['student']),dashboardController.recentEnrolled)
+router.get('/taskprogress',checkRole(['student']),dashboardController.taskProgress)
 
 
 

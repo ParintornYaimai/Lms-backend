@@ -13,10 +13,12 @@ export interface userTypeModel {
     email: string
     password: string
     role?: string
-    notes?: Types.ObjectId[]
-    comments?: Types.ObjectId[]
     assignments?: Types.ObjectId[]
-    profilepicture?: string
+    profilepicture?: {
+        fileId: string
+        filename: string,
+        fileUrl: string,
+    }
     refreshTokens?: { token: string; expiresAt: Date }[];
 }
 
@@ -38,13 +40,14 @@ export interface secretTypeModel{
 // สำหรับการอัปเดตข้อมูลผู้ใช้
 export interface UpdateUserRequestType {
     userId?: string;
-    firstname?: string;
-    lastname?: string;
-    welcomeMessage?: string;
+    firstName?: string;
+    lastName?: string;
+    message?: string;
     language?: string;
     dateFormat?: string;
     timeFormat?: string;
     country?: string;
     timeZone?: string;
     currentTime?: string;
+    profilePicture?: string;
 }

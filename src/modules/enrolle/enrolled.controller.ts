@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import log from "../../util/logger";
 import enrolledService from "./enrolled.service";
-import mongoose from "mongoose";
 
 
 class enrolledController {
@@ -32,8 +31,13 @@ class enrolledController {
     
     async getAll(req: Request, res: Response): Promise<void>{
         try {
-            const data = await enrolledService.getCourseBySubCate();
-            
+            const page = parseInt(req.query.page as string) || 1;
+            const sortBy = req.query.sortBy as string;
+            const limit = parseInt(req.query.limit as string) || 20;
+            const skip = (page - 1) * limit;
+            const category = req.query.category as string[]; 
+            const data = await enrolledService.getCourseBySubCate(sortBy, skip, limit, category);
+
             req.app.get('socketIO').emit('enrolled:getAll',data );
             res.status(200).json({success: true, data});
         }catch(error: any){
@@ -43,19 +47,19 @@ class enrolledController {
     }
 
     //ส่ง subcateId มา
-    async getCourseBySubCate(req: Request, res: Response): Promise<void>{
-        try {
-            // const filter = { coursesubjectcate: req.params.id };
-            const newObjId = new mongoose.Types.ObjectId(req.params.id)
-            const data = await enrolledService.getCourseBySubCate(newObjId)
+    // async getCourseBySubCate(req: Request, res: Response): Promise<void>{
+    //     try {
+    //         // const filter = { coursesubjectcate: req.params.id };
+    //         const newObjId = new mongoose.Types.ObjectId(req.params.id)
+    //         const data = await enrolledService.getCourseBySubCate(newObjId)
             
-            req.app.get('socketIO').to(req.user.id).emit('enrolled:getCourseBySubCate',data );
-            res.status(200).json({success: true, data})
-        } catch (error: any) {
-            res.status(500).json({success: false,message:error.message,error:'Internal server error'})
-            log.error(error.message);
-        }
-    }
+    //         req.app.get('socketIO').to(req.user.id).emit('enrolled:getCourseBySubCate',data );
+    //         res.status(200).json({success: true, data})
+    //     } catch (error: any) {
+    //         res.status(500).json({success: false,message:error.message,error:'Internal server error'})
+    //         log.error(error.message);
+    //     }
+    // }
     
     async getById(req: Request, res: Response): Promise<void>{
         try {

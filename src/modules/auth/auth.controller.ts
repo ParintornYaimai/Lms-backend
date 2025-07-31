@@ -1,6 +1,5 @@
-import { Request, Response ,NextFunction} from 'express';
+import { Request, Response } from 'express';
 import authService from './auth.service';
-import { Register,Login, Logout } from '../../schema/auth.sechema';
 import log from '../../util/logger';
 
 
@@ -8,8 +7,6 @@ class authController{
 
     async register(req: Request, res: Response):Promise<void>{
         try {
-
-            
             const {firstname, lastname, email, password} = req.body;
             await authService.create({firstname, lastname, email, password});
 
@@ -52,7 +49,6 @@ class authController{
     }
     
     async logout(req: Request, res: Response):Promise<void>{
-        
         try {
             const id = req.user.id;
             const refresh_token = req.cookies.refresh_token;
@@ -73,13 +69,10 @@ class authController{
 
     async refreshtoken(req: Request, res: Response):Promise<void>{
         try {
-            const { refreshTokenInput } = req.cookies; 
-            if (!refreshTokenInput){
-                res.status(401).send('Refresh Token required');
-            }
-
+            const refreshTokenInput  = req.cookies.refresh_token; 
+            
             const newAccessToken  = await authService.refreshToken(refreshTokenInput)
-            res.status(200).json({ access_Token: newAccessToken })
+            res.status(200).json({ access_token: newAccessToken })
         } catch (error:any) {
             res.status(500).json({success: false,message:error.message,error:'Internal server error'})
             log.error(error.message);

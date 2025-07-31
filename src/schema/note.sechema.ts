@@ -8,9 +8,6 @@ export const createNoteSchema = z.object({
     }),
 })
 
-export const getNoteByTagSchema = z.object({
-    tag: z.string().refine(val => val.trim().length > 0, { message: "Tag must not be empty or whitespace only",}),
-})
 
 export const updateNoteSchema = z.object({
     id: z.string(),
@@ -22,5 +19,4 @@ export const updateNoteSchema = z.object({
 })
 
 export type CreateNote = z.infer<typeof createNoteSchema>;
-export type GetNoteByTag = z.infer<typeof getNoteByTagSchema>
 export type UpdateNote = z.infer<typeof updateNoteSchema>

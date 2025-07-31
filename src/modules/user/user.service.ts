@@ -2,13 +2,12 @@ import { UpdateUserRequestType } from "../../types/user.type";
 import { studentModel } from "../../model/student.Model";
 import mongoose from "mongoose";
 import { CommentModel } from "../../model/comment.Model";
-import { NoteModel } from "../../model/note.Model";
 import { AssignmentModel } from "../../model/assignment.Model";
 import { client } from "../../../config/connectToRedis";
 
 class UserService {
   async getUser(userId: string) {
-    const userData = await studentModel.findById(userId).select('-password -refreshTokens');
+    const userData = await studentModel.findById(userId).select('firstname lastname profilepicture welcomeMessage language dateFormat timeFormat country timeZone');
     if(!userData) throw new Error("User not found");
 
     const keyNote = `user:${userData._id}`; 
@@ -18,17 +17,21 @@ class UserService {
   }
 
   // Update User
-  async updateUser({ userId, firstname, lastname, welcomeMessage, language, dateFormat, timeFormat, country, timeZone, currentTime }: UpdateUserRequestType) {
-    const user = await studentModel.findById({ userId });
-    if(!user) throw new Error("User not found");
+  async updateUser({ userId, firstName, lastName, message, language, dateFormat, timeFormat, country, timeZone, profilePicture}: UpdateUserRequestType) {
+    console.log('profilePicture',profilePicture)
+    const existingUser = await studentModel.findById(userId);
+    if(!existingUser) throw new Error("User not found");
 
     const savedUser = await studentModel.findByIdAndUpdate(userId,
-      { firstname, lastname, welcomeMessage, language, dateFormat, timeFormat, country, timeZone, currentTime },
-      { new: true });
+    { firstName, lastName, welcomeMessage:message, language, dateFormat, timeFormat, country, timeZone,  profilepicture: {
+      ...existingUser.profilepicture, // เก็บค่าเดิม
+      fileId: profilePicture // อัพเดทเฉพาะ fileId
+    }},
+    { new: true });
 
     if(!savedUser) throw new Error("Failed to save updated user");
 
-    const keyNote = `user:${user._id}`;
+    const keyNote = `user:${existingUser._id}`;
     if(client) await client.del(keyNote);  
 
     return savedUser;
@@ -40,11 +43,10 @@ class UserService {
 
     try {
       const deleteUser = await studentModel.findByIdAndDelete(userId, { session });
-
+      
       if(!deleteUser) throw new Error("User not found");
 
       await CommentModel.deleteMany({ userId }, { session });
-      await NoteModel.deleteMany({ userId }, { session });
       await AssignmentModel.deleteMany({ userId }, { session });
 
       await session.commitTransaction();

@@ -6,21 +6,25 @@ type BaseContent = {
 
 type TextContent = BaseContent & {
     type: "description";
+    name: string;
     content: string;
 };
 
-type PDFContent = BaseContent & {
+type FileContent = BaseContent & {
     type: "file";
+    name: string;
     size: number;
     url: string;
 };
 
 type VideoContent = BaseContent & {
     type: "video";
+    name: string;
+    size: number;
     url: string;
 };
 
-type Content = TextContent | PDFContent | VideoContent;
+type Content = TextContent | FileContent | VideoContent;
 
 export interface CourseModelType extends Document {
     title: string;
@@ -28,11 +32,15 @@ export interface CourseModelType extends Document {
     coursecate: Types.ObjectId;
     coursesubjectcate: Types.ObjectId;
     coursetopic: string;
-    duration: Date;
+    courselanguage: string;
+    subtitlelanguage: string;
+    courselevel: string;
+    duration: number;
     thumbnailurl: string;
     coursematerial: string;
-    mainpoint: string[];
+    whatyouwillteachincourse: string[];
     coursereq: string[];
+    whothiscourseisfor : string[];
     coursecrm: [{
         section: {
             sectionname: string;
@@ -41,9 +49,7 @@ export interface CourseModelType extends Document {
     }];
     welmsg: string;
     conmsg: string;
-    feedback: Types.ObjectId[]; 
     createby: Types.ObjectId; 
-    assignment: Types.ObjectId[]; 
 }
 
 export interface CreateCourse{
